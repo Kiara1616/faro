@@ -2,6 +2,10 @@
 
 **Actualización al 3 de noviembre de 2026; entrega el 10 de noviembre.** El estado de cada issue se consulta en GitHub. `P0` bloquea la versión integrada; `P1` completa la calidad profesional de v1 y no se elimina por la fecha de entrega. Las personas del equipo pueden escribir su nombre junto al rol. El [plan y calendario](PLAN_FARO_ORICA.md) contienen las puertas de salida de cada hito.
 
+**Roles de revisión:** producto contrasta el briefing y los supuestos; lógica y seguridad del simulador comprueban estados e invariantes; voz valida transcripción y falsas aceptaciones; interfaz comprueba comprensión; integración revisa contratos, persistencia y empaquetado; QA reproduce casos positivos y adversos. Son responsabilidades del equipo de software. La validación de operación minera y de controles de una MMU real corresponde a ORICA en una fase autorizada.
+
+**Regla de cierre:** asignar una persona implementadora y otra revisora; enlazar código, resultado de prueba y evidencia visual o registro según el issue. Marcar las tres casillas de revisión antes de cerrar. Una prueba manual no sustituye una prueba automatizada cuando el issue exige ambas.
+
 | ID | Hito | Prioridad | Título | Responsable sugerido | Depende de |
 | --- | --- | --- | --- | --- | --- |
 | F-01 | M0 | P0 | Cerrar alcance y registrar decisiones | Producto/integración | — |
@@ -24,23 +28,14 @@
 | F-18 | M5 | P1 | Prueba de comprensión con usuarios del equipo | Producto/interfaz | F-15 |
 | F-19 | M6 | P0 | Guion, evidencia y pitch de 5 minutos | Producto + todos | F-17 |
 | F-20 | M6 | P0 | Congelar versión y verificar entrega | Integración + todos | F-16, F-17, F-19, F-27, F-28 |
-
 | F-21 | M0 | P0 | Invariantes y alcance de seguridad del simulador | Producto + lógica | F-01, F-02 |
-
 | F-22 | M1 | P0 | Confirmación, pausa y cancelación simuladas | Lógica + interfaz | F-04, F-21 |
-
 | F-23 | M1 | P0 | Timeout, eventos tardíos y recuperación | Lógica/integración | F-05, F-21 |
-
 | F-24 | M1 | P0 | Escenarios reproducibles e inyección de fallos | Lógica/QA | F-03, F-05 |
-
 | F-25 | M2 | P0 | Fallos de audio y estado real de escucha | Voz/integración | F-10 |
-
 | F-26 | M4 | P1 | Privacidad de transcripciones y exportación de evidencia | Integración | F-08 |
-
 | F-27 | M4 | P0 | Paquete offline verificable para Windows | Integración | F-16 |
-
 | F-28 | M5 | P0 | Pruebas integradas y puerta de calidad en CI | QA/integración | F-15, F-22, F-23, F-24 |
-
 | F-29 | M6 | P0 | Manifiesto de entrega y traspaso | Producto/integración | F-17, F-20 |
 
 ## M0 — Alcance y contrato (2–3 nov.)
@@ -57,6 +52,11 @@
 
 **Evidencia para cerrar:** Revisión cruzada con Analisis_briefing_Faro_ORICA_2026-10-28.md; enlace al documento y acta breve del equipo.
 
+**Revisión antes de entregar — Producto:**
+- [ ] Implementación: Mapear cada afirmación del briefing a tiempo/fuente y anotar supuestos.
+- [ ] Casos adversos: Revisar que una respuesta futura de ORICA tenga dueño y efecto previsto en el alcance.
+- [ ] Revisión final: Leer el flujo con otra persona y señalar cualquier paso sin origen o decisión registrada.
+
 ### F-02 · Matriz de órdenes y condiciones de rechazo
 
 **Objetivo:** que cada orden tenga una intención, precondiciones y salida definida.
@@ -68,6 +68,11 @@
 **Criterios de aceptación detallados:** Cubrir consulta, selección, brazo, manguera, carga, pausa, cierre, siguiente y modo; número o unidad ausente, negación y frase desconocida no producen acción.
 
 **Evidencia para cerrar:** Revisión conjunta de voz/lógica/UI; una prueba positiva y una negativa por intención.
+
+**Revisión antes de entregar — Producto + voz:**
+- [ ] Implementación: Enumerar entradas exactas, argumentos, estados y efectos de todas las intenciones.
+- [ ] Casos adversos: Probar frase compuesta, negación, dato ausente y comando de otro taladro.
+- [ ] Revisión final: Comparar tabla con parser, motor y mensajes; ningún botón o voz omite la validación.
 
 ### F-03 · Malla y datos ficticios reproducibles
 
@@ -81,6 +86,11 @@
 
 **Evidencia para cerrar:** Tests de fixture válido, ID duplicado, campo ausente, kg inválidos y carga repetible.
 
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Definir esquema, versión y tres taladros ficticios con unidades visibles.
+- [ ] Casos adversos: Rechazar duplicados, kg no positivos, producto o método desconocido.
+- [ ] Revisión final: Confirmar que cada fixture se reinicia igual y no contiene datos de ORICA.
+
 ### F-21 · Invariantes y alcance de seguridad del simulador
 
 **Objetivo:** Escribir las reglas que nunca debe violar v1 en cualquier canal.
@@ -92,6 +102,11 @@
 **Entregable verificable:** planning/INVARIANTES.md, tabla regla → prueba → resultado.
 
 **Evidencia para cerrar:** Revisión de lógica/producto antes de cerrar motor, confirmación y timeouts.
+
+**Revisión antes de entregar — Seguridad + producto:**
+- [ ] Implementación: Escribir invariantes como condiciones comprobables y riesgos del simulador.
+- [ ] Casos adversos: Incluir rechazo sin mutación, una acción, zona ocupada y fin confirmado.
+- [ ] Revisión final: Rastrear cada invariante a test; distinguir pausa simulada de paro físico.
 
 ## M1 — Dominio y MMU simulada (3–5 nov.)
 
@@ -107,6 +122,11 @@
 
 **Evidencia para cerrar:** Tests de camino feliz y cada transición prohibida; revisar que rechazo no muta estado operacional.
 
+**Revisión antes de entregar — Seguridad + QA:**
+- [ ] Implementación: Codificar estados y transiciones sin dependencia de la interfaz.
+- [ ] Casos adversos: Inyectar orden simultánea, repetida y cambio de taladro con acción pendiente.
+- [ ] Revisión final: Inspeccionar snapshots antes/después y probar que cada rechazo conserva el estado.
+
 ### F-05 · Adaptador de MMU simulada y eventos
 
 **Objetivo:** probar la diferencia entre una orden aceptada y una acción concluida.
@@ -118,6 +138,11 @@
 **Criterios de aceptación detallados:** Enviar no equivale a completar; evento duplicado, tardío o de otro ID no cambia estado; no hay sockets, puertos industriales ni salidas físicas.
 
 **Evidencia para cerrar:** Tests de aceptación, demora, finalización, fallo, evento duplicado e ID ajeno.
+
+**Revisión antes de entregar — Seguridad + integración:**
+- [ ] Implementación: Separar respuesta de aceptación, progreso y fin por command_id.
+- [ ] Casos adversos: Inyectar evento duplicado, desordenado, perdido y de ID distinto.
+- [ ] Revisión final: Comprobar que solo un evento final válido permite mostrar completado.
 
 ### F-06 · Excepciones de taladro, cantidad y mezcla
 
@@ -131,6 +156,11 @@
 
 **Evidencia para cerrar:** Test por desviación y de recuperación; bitácora contiene causa y decisión.
 
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Definir causa, mensaje y ruta ficticia de corrección para cada desvío.
+- [ ] Casos adversos: Combinar discrepancias de ID, mezcla y kg; probar dato vacío y taladro bloqueado.
+- [ ] Revisión final: Verificar que nunca se inicia carga con excepción pendiente ni se borra el plan original.
+
 ### F-07 · Sesión y modos voz/manual excluyentes
 
 **Objetivo:** modelar al operador responsable y evitar órdenes simultáneas.
@@ -142,6 +172,11 @@
 **Criterios de aceptación detallados:** Voz en manual se rechaza; detener escucha antes de transferencia; cambio durante acción no la completa; una sola acción activa; sesión no se presenta como biometría.
 
 **Evidencia para cerrar:** Tests de transferencias y entrada simultánea voz/teclado; captura del modo visible.
+
+**Revisión antes de entregar — Seguridad + voz:**
+- [ ] Implementación: Definir estados de sesión y transferencia de voz a manual.
+- [ ] Casos adversos: Intentar voz en manual, cambio en medio de acción y entradas simultáneas.
+- [ ] Revisión final: Corroborar que micrófono, modo visible, motor y bitácora coincidan.
 
 ### F-08 · Bitácora de decisiones y resultados
 
@@ -155,6 +190,11 @@
 
 **Evidencia para cerrar:** Test con BD anterior temporal, reinicio y correlación de evento tardío.
 
+**Revisión antes de entregar — QA + integración:**
+- [ ] Implementación: Versionar esquema y documentar migración desde la BD actual.
+- [ ] Casos adversos: Reiniciar tras éxito, rechazo y acción incompleta; probar BD anterior.
+- [ ] Revisión final: Reconstruir secuencia por ID y confirmar que no se guardó audio.
+
 ### F-22 · Confirmación, pausa y cancelación simuladas
 
 **Objetivo:** Evitar que una frase incompleta, caducada o repetida desencadene una acción.
@@ -166,6 +206,11 @@
 **Entregable verificable:** Estado pending_confirmation, temporizador y mensajes.
 
 **Evidencia para cerrar:** Tests de confirmar, rechazar, vencer, repetir y cambiar contexto.
+
+**Revisión antes de entregar — Seguridad + interfaz:**
+- [ ] Implementación: Definir confirmación por acción, contenido, vencimiento y cancelación.
+- [ ] Casos adversos: Probar confirmación duplicada, tardía y tras cambio de taladro/plan.
+- [ ] Revisión final: Inspeccionar que solicitud al simulador ocurre solo tras confirmación válida.
 
 ### F-23 · Timeout, eventos tardíos y recuperación
 
@@ -179,6 +224,11 @@
 
 **Evidencia para cerrar:** Tests deterministas de timeout, reinicio, duplicado y evento tardío.
 
+**Revisión antes de entregar — Seguridad + QA:**
+- [ ] Implementación: Definir reloj inyectable, timeout y estado de recuperación conservador.
+- [ ] Casos adversos: Probar reinicio, respuesta tardía y evento repetido.
+- [ ] Revisión final: Verificar que no se reenvía automáticamente ni se infiere éxito.
+
 ### F-24 · Escenarios reproducibles e inyección de fallos
 
 **Objetivo:** Repetir guion y fallos sin modificar el código.
@@ -190,6 +240,11 @@
 **Entregable verificable:** Fixtures, cargador y guía de reproducción.
 
 **Evidencia para cerrar:** Tests por fixture y ensayo manual de reinicio.
+
+**Revisión antes de entregar — QA + producto:**
+- [ ] Implementación: Versionar fixtures y selector visible de escenario ficticio.
+- [ ] Casos adversos: Ejecutar cada fallo dos veces y luego volver al escenario normal.
+- [ ] Revisión final: Comparar eventos y estado final; no debe quedar contaminación entre ensayos.
 
 ## M2 — Canal de voz local (3–6 nov.)
 
@@ -205,6 +260,11 @@
 
 **Evidencia para cerrar:** Tests parametrizados de acentos, cifras/palabras, IDs, kg, unidades y negativos.
 
+**Revisión antes de entregar — Seguridad + QA:**
+- [ ] Implementación: Fijar gramática cerrada con unidades, IDs y números explícitos.
+- [ ] Casos adversos: Probar homófonos, números cercanos, dos órdenes, negaciones y prefijo aislado.
+- [ ] Revisión final: Comparar intención/argumentos exactos; ninguna aproximación dispara acción.
+
 ### F-10 · Conectar ASR local al nuevo dominio
 
 **Objetivo:** reutilizar Vosk y el micrófono existentes para el flujo por taladro.
@@ -216,6 +276,11 @@
 **Criterios de aceptación detallados:** Completar ciclo limpio sin Internet; resultado parcial/final no duplica acción; frase desconocida no cambia estado; hilo de UI responde durante reconocimiento.
 
 **Evidencia para cerrar:** Tests con transcripciones y ensayo documentado con micrófono, dispositivo y entorno.
+
+**Revisión antes de entregar — Lógica + QA:**
+- [ ] Implementación: Conectar transcripción final al parser y conservar la parcial solo para visualización.
+- [ ] Casos adversos: Probar micrófono activo/inactivo, repetición de final y frase no admitida.
+- [ ] Revisión final: Verificar que UI no se congela y no hay llamada directa del ASR al adaptador.
 
 ### F-11 · Corpus y evaluación de voz
 
@@ -229,6 +294,11 @@
 
 **Evidencia para cerrar:** Repetir evaluación con mismo corpus; revisar manualmente falsos positivos; no publicar WAV privados.
 
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Etiquetar voces consentidas, comando esperado, contexto y condiciones de ruido.
+- [ ] Casos adversos: Contabilizar falsas aceptaciones por acción y números confundidos.
+- [ ] Revisión final: Recalcular denominadores y latencia; publicar limitaciones de tamaño de muestra.
+
 ### F-25 · Fallos de audio y estado real de escucha
 
 **Objetivo:** Evitar que la UI afirme escuchar tras fallo de captura.
@@ -240,6 +310,11 @@
 **Entregable verificable:** Estados de captura, mensajes y ruta de recuperación.
 
 **Evidencia para cerrar:** Tests con dispositivo simulado y ensayo de desconexión de micrófono.
+
+**Revisión antes de entregar — Integración + QA:**
+- [ ] Implementación: Modelar estados reales de captura y mensajes de recuperación.
+- [ ] Casos adversos: Simular permiso denegado, dispositivo perdido, modelo faltante y reintento.
+- [ ] Revisión final: Confirmar cierre de hilo y ausencia de decisiones duplicadas tras reconectar.
 
 ## M3 — Consola operacional (3–6 nov.)
 
@@ -255,6 +330,11 @@
 
 **Evidencia para cerrar:** Prueba Qt offscreen y recorrido manual de tres fixtures con captura.
 
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Trazar cada dato visual a plan, motor o simulador; rotular simulación.
+- [ ] Casos adversos: Mostrar estado sin taladro, excepción y acción pendiente.
+- [ ] Revisión final: Revisar captura a distancia de laptop y navegar dos taladros por teclado.
+
 ### F-13 · Estados de ejecución y alertas claras
 
 **Objetivo:** impedir que el operador confunda una transcripción con una acción finalizada.
@@ -267,6 +347,11 @@
 
 **Evidencia para cerrar:** Pruebas UI de demora, fallo, rechazo, excepción y correlación.
 
+**Revisión antes de entregar — Seguridad + QA:**
+- [ ] Implementación: Definir texto y severidad por evento, sin usar color como único indicador.
+- [ ] Casos adversos: Probar progreso prolongado, fallo, rechazo, timeout y evento ajeno.
+- [ ] Revisión final: Comparar texto final con estado del motor y registro por ID.
+
 ### F-14 · Confirmaciones breves y ergonomía
 
 **Objetivo:** dar retroalimentación útil sin saturar la cabina.
@@ -278,6 +363,11 @@
 **Criterios de aceptación detallados:** Dos usuarios pueden repetir qué terminó y qué se rechazó; resultado sigue visible si TTS falla; teclado, contraste y tamaño legibles en laptop/auricular.
 
 **Evidencia para cerrar:** Ensayo de comprensión y captura de estados; registrar decisión de incluir o no TTS local.
+
+**Revisión antes de entregar — Producto + voz:**
+- [ ] Implementación: Redactar mensajes cortos con taladro y resultado explícitos.
+- [ ] Casos adversos: Evaluar foco, tamaño, contraste y salida TTS opcional con auricular.
+- [ ] Revisión final: Pedir a dos usuarios que expliquen qué pasó sin ver el código.
 
 ## M4 — Integración y empaquetado (6–8 nov.)
 
@@ -293,6 +383,11 @@
 
 **Evidencia para cerrar:** Tests de integración sin hardware y recorrido manual en laptop.
 
+**Revisión antes de entregar — Seguridad + QA:**
+- [ ] Implementación: Integrar componentes por contratos y serializar solicitudes.
+- [ ] Casos adversos: Correr voz y clic casi simultáneos; provocar rechazo antes de adaptador.
+- [ ] Revisión final: Comparar UI, motor y SQLite en dos taladros; una intención produce a lo sumo una solicitud.
+
 ### F-16 · Arranque reproducible sin Internet
 
 **Objetivo:** ejecutar Faro en la laptop disponible sin instalaciones de último momento.
@@ -304,6 +399,11 @@
 **Criterios de aceptación detallados:** Copia limpia preparada inicia, completa guion y reinicia sin red; falta de modelo/malla/micrófono da mensaje útil; Docker solo prueba código sin GUI.
 
 **Evidencia para cerrar:** CI Windows, ensayo con red desactivada y registro de versión de Python/Windows.
+
+**Revisión antes de entregar — QA + integración:**
+- [ ] Implementación: Fijar dependencias, modelo local, rutas de datos y diagnóstico de inicio.
+- [ ] Casos adversos: Probar modelo ausente, ruta con espacios y red desactivada.
+- [ ] Revisión final: Seguir guía en copia limpia y registrar versión de Windows/Python.
 
 ### F-26 · Privacidad de transcripciones y exportación de evidencia
 
@@ -317,6 +417,11 @@
 
 **Evidencia para cerrar:** Pruebas de exportación/borrado y revisión de archivos rastreados y empaquetados.
 
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Definir conservación, limpieza y reporte exportable con datos ficticios.
+- [ ] Casos adversos: Revisar .gitignore, carpeta de entrega y BD tras ensayo humano.
+- [ ] Revisión final: Otro integrante inspecciona que no haya WAV, datos personales ni briefing privado.
+
 ### F-27 · Paquete offline verificable para Windows
 
 **Objetivo:** Entregar carpeta ejecutable comprobable en la laptop prevista.
@@ -328,6 +433,11 @@
 **Entregable verificable:** Carpeta de distribución local, manifiesto y restauración.
 
 **Evidencia para cerrar:** Instalación limpia y prueba offline documentada con versión de Windows.
+
+**Revisión antes de entregar — QA + integración:**
+- [ ] Implementación: Crear paquete y manifiesto de versiones/hashes con diagnóstico.
+- [ ] Casos adversos: Probar copia limpia, ruta con espacios, red ausente y asset alterado.
+- [ ] Revisión final: Una persona distinta ejecuta normal/fallo siguiendo solo la guía.
 
 ## M5 — Validación y ajustes (8–9 nov.)
 
@@ -343,6 +453,11 @@
 
 **Evidencia para cerrar:** Repetir casos corregidos; métricas con denominador y condición; revisión cruzada.
 
+**Revisión antes de entregar — Producto + seguridad:**
+- [ ] Implementación: Registrar esperado, observado, evidencia y severidad de cada fallo.
+- [ ] Casos adversos: Incluir errores de voz, estado, modo, timeout y sensor ficticio.
+- [ ] Revisión final: Repetir casos corregidos y revisar que ninguna acción avance tras rechazo.
+
 ### F-18 · Prueba de comprensión con usuarios del equipo
 
 **Objetivo:** detectar confusión de interfaz sin fingir validación minera.
@@ -355,6 +470,11 @@
 
 **Evidencia para cerrar:** Repetir paso confuso tras el cambio y conservar capturas antes/después.
 
+**Revisión antes de entregar — Producto + interfaz:**
+- [ ] Implementación: Preparar guion sin pistas y registrar tiempo/errores de dos participantes.
+- [ ] Casos adversos: Observar confusión entre reconocido, aceptado y completado.
+- [ ] Revisión final: Aplicar correcciones y repetir la tarea que produjo confusión.
+
 ### F-28 · Pruebas integradas y puerta de calidad en CI
 
 **Objetivo:** Detectar regresiones del flujo completo en cada push.
@@ -366,6 +486,11 @@
 **Entregable verificable:** Suite de integración, fixtures y workflow actualizado.
 
 **Evidencia para cerrar:** Enlace a CI, reporte y control negativo documentado.
+
+**Revisión antes de entregar — Seguridad + integración:**
+- [ ] Implementación: Automatizar flujo de dos taladros y casos negativos con BD temporal.
+- [ ] Casos adversos: Incluir carrera de órdenes, timeout, reinicio y evento ajeno.
+- [ ] Revisión final: Adjuntar CI Windows y confirmar que transición prohibida hace fallar la suite.
 
 ## M6 — Entrega (9–10 nov.)
 
@@ -381,6 +506,11 @@
 
 **Evidencia para cerrar:** Acta de ensayo y revisión de afirmaciones por un segundo integrante.
 
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Vincular cada afirmación del pitch con pantalla, prueba o fuente.
+- [ ] Casos adversos: Ensayar fallo de micrófono y usar recorrido alternativo por teclado.
+- [ ] Revisión final: Cronometrar cinco minutos y revisar que métricas y límites sean exactos.
+
 ### F-20 · Congelar versión y verificar entrega
 
 **Objetivo:** presentar una versión estable y recuperable.
@@ -393,6 +523,11 @@
 
 **Evidencia para cerrar:** Ensayo final y comparación de manifiesto/hash con carpeta entregada.
 
+**Revisión antes de entregar — QA + producto:**
+- [ ] Implementación: Fijar commit, tag, hashes y lista de defectos residuales.
+- [ ] Casos adversos: Ejecutar normal y rechazo tras desconectar red y reiniciar app.
+- [ ] Revisión final: Otro integrante coteja paquete, manifiesto y evidencia antes de congelar.
+
 ### F-29 · Manifiesto de entrega y traspaso
 
 **Objetivo:** Permitir a otra persona instalar, ejecutar, evaluar y continuar Faro sin explicación oral.
@@ -404,6 +539,11 @@
 **Entregable verificable:** ENTREGA_FARO.md y manifiesto de archivos.
 
 **Evidencia para cerrar:** Prueba de traspaso cronometrada y checklist de carpeta final.
+
+**Revisión antes de entregar — Producto + QA:**
+- [ ] Implementación: Ordenar guía, versión, escenarios, resultados, límites y preguntas a ORICA.
+- [ ] Casos adversos: Abrir cada enlace/archivo del manifiesto en carpeta offline.
+- [ ] Revisión final: Pedir traspaso a alguien ajeno y anotar pasos que requirieron ayuda.
 
 ## Regla para cerrar un issue
 
