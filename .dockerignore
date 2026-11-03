@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+.pytest_cache
+__pycache__
+models
+data
+work
+build
+dist
+*.pyc
+*.sqlite3
+*.wav
+*.mp4
