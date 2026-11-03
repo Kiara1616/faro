@@ -36,13 +36,13 @@ El prototipo **no actuará sobre una MMU, PLC, LOADPlus o ProBlast real**. La co
 
 | Hito | Fechas objetivo | Resultado verificable | Issues |
 | --- | --- | --- | --- |
-| **M0 — Alcance y contrato** | 2 nov. | Flujo, estados, vocabulario, datos ficticios y supuestos aprobados internamente; preguntas enviables al comité. | F-01 a F-03 |
-| **M1 — Dominio y MMU simulada** | 3–5 nov. | Ciclo completo por taladro con transiciones, excepciones, eventos y auditoría probados por teclado. | F-04 a F-08 |
-| **M2 — Canal de voz local** | 3–6 nov. | Comandos del dominio nuevo reconocidos localmente y evaluados con audio etiquetado; invocación opcional después de activar escucha. | F-09 a F-11 |
+| **M0 — Alcance y contrato** | 2–3 nov. | Flujo, estados, vocabulario, datos ficticios, supuestos e invariantes aprobados internamente; preguntas enviables al comité. | F-01 a F-03, F-21 |
+| **M1 — Dominio y MMU simulada** | 3–5 nov. | Ciclo completo por taladro con transiciones, excepciones, confirmación, timeout, eventos y auditoría probados por teclado. | F-04 a F-08, F-22 a F-24 |
+| **M2 — Canal de voz local** | 3–6 nov. | Comandos del dominio nuevo reconocidos localmente, fallos de audio controlados y evaluación con audio etiquetado. | F-09 a F-11, F-25 |
 | **M3 — Consola operacional** | 3–6 nov. | Interfaz sobria que muestra plan, estado, modo, progreso, alertas y confirmación de resultado. | F-12 a F-14 |
-| **M4 — Integración y empaquetado** | 6–8 nov. | Un solo flujo de extremo a extremo en laptop y arranque sin red. | F-15 a F-16 |
-| **M5 — Validación y ajustes** | 8–9 nov. | Matriz de fallos ejecutada, métricas reportadas y problemas graves resueltos. | F-17 a F-18 |
-| **M6 — Entrega** | 9–10 nov. | Versión congelada, guion y pitch ensayados; carpeta de entrega reproducible. | F-19 a F-20 |
+| **M4 — Integración y empaquetado** | 6–8 nov. | Un solo flujo de extremo a extremo en laptop, privacidad de datos y paquete verificable sin red. | F-15 a F-16, F-26 a F-27 |
+| **M5 — Validación y ajustes** | 8–9 nov. | Matriz de fallos, pruebas integradas en CI, métricas reportadas y problemas graves resueltos. | F-17 a F-18, F-28 |
+| **M6 — Entrega** | 9–10 nov. | Versión congelada, guion y pitch ensayados; traspaso y carpeta de entrega reproducibles. | F-19 a F-20, F-29 |
 
 Las fechas son objetivos internos para entregar **todo el alcance de v1 el 10 de noviembre**. M1, M2 y M3 avanzan en paralelo a partir del contrato de M0; se integran por interfaces pactadas desde el 3 de noviembre, sin esperar a que cada componente esté terminado. M4 depende de sus contratos y de un recorrido funcional; M5 y M6 pueden preparar pruebas y presentación en paralelo. Ningún hito depende de obtener un PLC o un camión. Este calendario requiere trabajo simultáneo de los cuatro frentes y revisión diaria de bloqueos; no equivale a garantizar que todas las métricas se alcanzarán.
 
@@ -64,10 +64,10 @@ Las fechas son objetivos internos para entregar **todo el alcance de v1 el 10 de
 
 | Responsabilidad | Trabajo principal | Revisión cruzada |
 | --- | --- | --- |
-| Responsable de producto/integración | F-01, F-03, F-15, F-19, F-20; contacto con comité. | Verifica que cada pantalla y frase corresponda al flujo del briefing. |
-| Lógica y simulación | F-04 a F-08. | Revisa transiciones, rechazos y trazabilidad con el responsable de voz. |
-| Voz y evaluación | F-09 a F-11 y apoyo en F-17. | Revisa falsos positivos y degradación con el responsable de lógica. |
-| Interfaz y experiencia | F-12 a F-14 y apoyo en F-18. | Revisa legibilidad y claridad de estados con integración. |
+| Responsable de producto/integración | F-01, F-03, F-15, F-19, F-20, F-21, F-26, F-27, F-29; contacto con comité. | Verifica que cada pantalla y frase corresponda al flujo del briefing. |
+| Lógica y simulación | F-04 a F-08, F-21 a F-24. | Revisa transiciones, rechazos y trazabilidad con el responsable de voz. |
+| Voz y evaluación | F-09 a F-11, F-25 y apoyo en F-17. | Revisa falsos positivos y degradación con el responsable de lógica. |
+| Interfaz y experiencia | F-12 a F-14 y apoyo en F-18, F-22. | Revisa legibilidad y claridad de estados con integración. |
 
 Si son menos de cuatro personas, agrupar producto con interfaz y lógica con integración. Dado que el equipo no tiene un especialista de minería, **el flujo es una hipótesis informada por el briefing** hasta recibir observación o confirmación de ORICA. La revisión industrial futura debe hacerla personal competente de ORICA; no se sustituye con una revisión de software.
 
@@ -109,4 +109,4 @@ Si no llega respuesta, continuar con **malla y sensores ficticios**, etiquetados
 
 ## Backlog operativo
 
-Los issues detallados están en [ISSUES_FARO_ORICA.md](ISSUES_FARO_ORICA.md) y publicados en el [repositorio privado `Kiara1616/faro`](https://github.com/Kiara1616/faro/issues). Cada uno tiene responsable por rol, dependencia, hito y una condición clara para cerrarlo. El tablero local sigue siendo la copia de referencia para trabajar sin red.
+Los **29 issues** detallados están en [ISSUES_FARO_ORICA.md](ISSUES_FARO_ORICA.md) y publicados en el [repositorio privado `Kiara1616/faro`](https://github.com/Kiara1616/faro/issues). Cada uno tiene responsable por rol, dependencia, hito, entregable, criterios de aceptación y evidencia para cerrarlo. El tablero local sigue siendo la copia de referencia para trabajar sin red.
