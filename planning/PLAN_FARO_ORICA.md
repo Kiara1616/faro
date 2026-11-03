@@ -109,4 +109,4 @@ Si no llega respuesta, continuar con **malla y sensores ficticios**, etiquetados
 
 ## Backlog operativo
 
-Los issues detallados están en [ISSUES_FARO_ORICA.md](ISSUES_FARO_ORICA.md) y publicados en el [repositorio privado `KiaaraZM/faro`](https://github.com/KiaaraZM/faro/issues). Cada uno tiene responsable por rol, dependencia, hito y una condición clara para cerrarlo. El tablero local sigue siendo la copia de referencia para trabajar sin red.
+Los issues detallados están en [ISSUES_FARO_ORICA.md](ISSUES_FARO_ORICA.md) y publicados en el [repositorio privado `Kiara1616/faro`](https://github.com/Kiara1616/faro/issues). Cada uno tiene responsable por rol, dependencia, hito y una condición clara para cerrarlo. El tablero local sigue siendo la copia de referencia para trabajar sin red.
