@@ -4,6 +4,8 @@ Aplicación de escritorio para demostrar interacción por voz en una **consola f
 
 El [plan de integración](planning/PLAN_FARO_ORICA.md), la [arquitectura](planning/ARQUITECTURA_FARO.md) y el [backlog de issues](planning/ISSUES_FARO_ORICA.md) organizan ese cambio hasta la entrega del proyecto el 10 de noviembre.
 
+El trabajo del equipo se coordina en los [issues del repositorio privado](https://github.com/KiaaraZM/faro/issues); la rama principal ejecuta pruebas automáticas en Windows.
+
 ## Qué demuestra
 
 - Una interfaz local con vistas de estado, indicadores y revisión auxiliar.
