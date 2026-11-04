@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.evaluate_voice import evaluate_cases, load_cases
+from scripts.evaluate_voice import evaluate_cases, evaluate_pipeline_cases, load_cases
 
 
 class EvaluateVoiceTests(unittest.TestCase):
@@ -50,6 +50,19 @@ class EvaluateVoiceTests(unittest.TestCase):
             path.write_text("wav,expected_text,expected_accept\na.wav,mostrar estado,maybe\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "expected_accept"):
                 load_cases(path)
+
+    def test_pipeline_evaluator_reports_condition_and_false_acceptance(self):
+        cases = [
+            {"wav": Path("good.wav"), "expected_text": "consultar estado", "expected_accept": True,
+             "setup_commands": [], "condition": "limpio", "speaker": "A", "noise": "none"},
+            {"wav": Path("negative.wav"), "expected_text": "conversacion ajena", "expected_accept": False,
+             "setup_commands": [], "condition": "ruido", "speaker": "B", "noise": "radio"},
+        ]
+        transcripts = {"good.wav": "consultar estado", "negative.wav": "consultar estado"}
+        report = evaluate_pipeline_cases(cases, lambda path: (transcripts[path.name], 10.0))
+        assert report["summary"]["false_accepts"] == 1
+        assert report["summary"]["by_condition"]["ruido"]["false_accept_rate"] == 1.0
+        assert report["summary"]["latency_p95_ms"] == 10.0
 
 
 if __name__ == "__main__":

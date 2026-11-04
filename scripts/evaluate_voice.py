@@ -15,6 +15,7 @@ import sys
 import time
 import unicodedata
 import wave
+from collections import defaultdict
 from pathlib import Path
 from typing import Callable
 
@@ -23,6 +24,9 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from faro.core import FaroEngine
+from faro.domain import FaroDomain, Mode, Source
+from faro.plan import load_demo_plan
+from faro.voice_pipeline import VoicePipeline
 
 
 Transcriber = Callable[[Path], tuple[str, float]]
@@ -59,6 +63,9 @@ def load_cases(csv_path: Path) -> list[dict]:
                 "expected_text": expected_text,
                 "expected_accept": _parse_bool(row.get("expected_accept") or ""),
                 "setup_commands": [part.strip() for part in (row.get("setup_commands") or "").split("|") if part.strip()],
+                "condition": (row.get("condition") or "unspecified").strip() or "unspecified",
+                "speaker": (row.get("speaker") or "unspecified").strip() or "unspecified",
+                "noise": (row.get("noise") or "unspecified").strip() or "unspecified",
             })
     if not cases:
         raise ValueError("El CSV no contiene casos.")
@@ -129,6 +136,66 @@ def evaluate_cases(cases: list[dict], transcribe: Transcriber) -> dict:
         "false_accepts": false_accepts,
         "false_accept_rate": round(false_accepts / negatives, 4) if negatives else None,
         "mean_recognition_latency_ms": round(sum(row["recognition_latency_ms"] for row in rows) / total, 1),
+    }
+    return {"summary": summary, "cases": rows}
+
+
+def evaluate_pipeline_cases(cases: list[dict], transcribe: Transcriber, plan_path: Path | None = None) -> dict:
+    """Evaluate the current parser/domain boundary with a local transcriber.
+
+    This keeps the legacy evaluator available while ensuring F-11 measures the
+    same session-protected path used by Faro v1. Audio is read only by the
+    injected transcriber; this function never saves or uploads it.
+    """
+    plan = load_demo_plan(plan_path or PROJECT_ROOT / "fixtures" / "malla_demo.json")
+    rows = []
+    for index, case in enumerate(cases, start=1):
+        domain = FaroDomain(plan)
+        domain.begin_session(f"eval-{index}", case.get("speaker", "test"), Mode.VOZ)
+        domain.set_listening(f"eval-{index}", True)
+        generation = domain.session.generation
+        pipeline = VoicePipeline(plan, domain)
+        for command_text in case["setup_commands"]:
+            setup = pipeline.process(command_text, source=Source.TEXT, session_id=f"eval-{index}")
+            if setup.decision is None or not setup.decision.accepted:
+                raise ValueError(f"Preparación de caso rechazada ({case['wav']}): {command_text}")
+        transcript, latency_ms = transcribe(case["wav"])
+        result = pipeline.process(transcript, source=Source.VOICE,
+                                  session_id=f"eval-{index}", generation=generation,
+                                  zone_clear=case.get("zone_clear", False))
+        decision = result.decision
+        accepted = bool(decision and decision.accepted)
+        rows.append({
+            "wav": str(case["wav"]), "condition": case["condition"],
+            "speaker": case["speaker"], "noise": case["noise"],
+            "expected_text": case["expected_text"], "transcript": transcript,
+            "transcript_correct": _normalize(transcript) == _normalize(case["expected_text"]),
+            "expected_accept": case["expected_accept"], "accepted": accepted,
+            "false_accept": not case["expected_accept"] and accepted,
+            "intent": result.parsed.intent, "reason": (decision.reason if decision else result.parsed.reason),
+            "recognition_latency_ms": latency_ms,
+        })
+    latencies = sorted(row["recognition_latency_ms"] for row in rows)
+    negatives = sum(not row["expected_accept"] for row in rows)
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for row in rows:
+        groups[row["condition"]].append(row)
+    by_condition = {}
+    for condition, items in groups.items():
+        forbidden = sum(not item["expected_accept"] for item in items)
+        false = sum(item["false_accept"] for item in items)
+        by_condition[condition] = {"cases": len(items), "false_accepts": false,
+                                   "forbidden_cases": forbidden,
+                                   "false_accept_rate": round(false / forbidden, 4) if forbidden else None}
+    summary = {
+        "cases": len(rows), "exact_transcriptions": sum(row["transcript_correct"] for row in rows),
+        "exact_transcription_rate": round(sum(row["transcript_correct"] for row in rows) / len(rows), 4),
+        "decision_accuracy": round(sum(row["accepted"] == row["expected_accept"] for row in rows) / len(rows), 4),
+        "forbidden_cases": negatives, "false_accepts": sum(row["false_accept"] for row in rows),
+        "false_accept_rate": round(sum(row["false_accept"] for row in rows) / negatives, 4) if negatives else None,
+        "latency_p50_ms": latencies[(len(latencies) - 1) // 2],
+        "latency_p95_ms": latencies[min(len(latencies) - 1, max(0, int(len(latencies) * 0.95) - 1))],
+        "by_condition": by_condition,
     }
     return {"summary": summary, "cases": rows}
 
