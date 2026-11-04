@@ -175,6 +175,17 @@ class FaroDomain:
         self.session.mode = mode
         return True
 
+    def session_snapshot(self) -> dict:
+        """UI-safe session view; explicitly labels the operator as fictitious."""
+        if self.session is None:
+            return {"active": False, "operator_label": None, "session_id": None,
+                    "mode": Mode.DESHABILITADO.value, "listening": False,
+                    "generation": None, "simulation_only": True}
+        return {"active": True, "operator_label": self.session.operator_label,
+                "session_id": self.session.session_id, "mode": self.session.mode.value,
+                "listening": self.session.listening, "generation": self.session.generation,
+                "simulation_only": True}
+
     def handle_input(self, command: Command, *, source: Source, session_id: str,
                      generation: int | None = None) -> Decision:
         """Mandatory input boundary enforcing session, mode and capture generation."""

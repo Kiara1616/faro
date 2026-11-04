@@ -197,10 +197,13 @@ def test_blocked_hole_and_skipping_next_hole_are_rejected():
 
 def test_session_requires_explicit_start_and_rejects_voice_in_manual():
     domain = engine()
+    assert domain.session_snapshot()["active"] is False
     command = Command(Intent.CONSULTAR_ESTADO)
     denied = domain.handle_input(command, source=Source.VOICE, session_id="missing")
     assert not denied.accepted and denied.reason == "invalid_session"
     assert domain.begin_session("demo-1", "operador de prueba", Mode.MANUAL)
+    view = domain.session_snapshot()
+    assert view["active"] and view["simulation_only"] and view["mode"] == "manual"
     denied = domain.handle_input(command, source=Source.VOICE, session_id="demo-1")
     assert not denied.accepted and denied.reason == "voice_disabled_in_manual"
     assert domain.state is State.SIN_SELECCION
