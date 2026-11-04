@@ -100,8 +100,8 @@ def parse_command(text: str, plan: DemoPlan, *, listening_active: bool = False) 
     `listening_active` only permits removal of an optional initial address.
     The session boundary must independently verify source, mode and generation.
     """
-    if not isinstance(text, str) or not isinstance(plan, DemoPlan):
-        raise TypeError("text must be str and plan must be DemoPlan")
+    if not isinstance(text, str) or not isinstance(plan, DemoPlan) or type(listening_active) is not bool:
+        raise TypeError("text, plan and listening_active must be str, DemoPlan and bool")
     original = text
     normalized = _normalize(text)
     if listening_active:
@@ -146,7 +146,10 @@ def parse_command(text: str, plan: DemoPlan, *, listening_active: bool = False) 
                     return _result("ambiguous", Intent.DECLARAR_PLAN.value, None,
                                    "missing_or_invalid_quantity_unit", original, normalized)
                 raw_kg = " ".join(words[:-1])
-                kg = int(raw_kg) if re.fullmatch(r"[1-9][0-9]*", raw_kg) else _SPOKEN_KG.get(raw_kg)
+                # A finite demo bound also prevents giant digit strings from
+                # exhausting conversion time; larger values are not inferred.
+                kg = (int(raw_kg) if len(raw_kg) <= 9 and re.fullmatch(r"[1-9][0-9]*", raw_kg)
+                      else _SPOKEN_KG.get(raw_kg))
                 if kg is None:
                     return _result("ambiguous", Intent.DECLARAR_PLAN.value, None,
                                    "invalid_or_incomplete_quantity", original, normalized)
