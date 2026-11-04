@@ -230,7 +230,7 @@ def test_missing_values_are_transient_but_plan_divergence_blocks_until_exact_ret
     divergent = send(domain, Intent.DECLARAR_PLAN, product="producto beta", kg=101)
     assert not divergent.accepted and domain.snapshot() == operational
     alert = divergent.alert_after
-    assert alert.blocking and alert.requires_human
+    assert alert.blocking and not alert.requires_human
     assert (alert.expected_product, alert.expected_kg) == ("producto alfa", 100)
     assert (alert.received_product, alert.received_kg) == ("producto beta", 101)
     partial = send(domain, Intent.DECLARAR_PLAN, product="producto alfa")

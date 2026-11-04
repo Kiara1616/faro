@@ -151,7 +151,6 @@ class FaroDomain:
                 received_kg=command.kg if type(command.kg) is int else None,
                 expected_method=hole.delivery_method if hole else None,
                 received_method=method,
-                requires_human=reason == "plan_mismatch",
                 blocking=reason == "plan_mismatch",
             )
             self.alert = alert

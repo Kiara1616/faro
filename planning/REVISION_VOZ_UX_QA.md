@@ -42,3 +42,19 @@ La UI debe mostrar al mismo tiempo: **taladro activo**, **plan**, **transcripci�
 - [ ] F-13 se ensayó con demora, fallo, timeout y pérdida de micrófono; un usuario puede distinguir «escuchado» de «completado».
 
 La aceptación de estas pruebas certifica solo el comportamiento del **prototipo simulado** bajo las condiciones ensayadas. Cualquier validación para operación minera requeriría requisitos, datos y revisión competente de ORICA.
+
+## Revisión específica de F-07: sesión, fuente y modo
+
+Al revisar `faro/domain.py` durante F-04, el motor todavía recibe una `Command` tipada sin `source`, `session_id`, modo o estado real de escucha. Esto delimita correctamente el núcleo de transiciones de F-04, pero **no cumple F-07** por sí solo. El controlador de sesión debe ser una frontera obligatoria antes de llamar a `FaroDomain.handle`; ni la UI ni un callback del ASR pueden saltársela.
+
+| Caso | Estado inicial | Entrada | Resultado exigido |
+| --- | --- | --- | --- |
+| Voz en manual | Sesión ficticia activa, modo `MANUAL` | `source=voice`, cualquier intención, incluso consulta | Rechazo auditado; cero llamadas al dominio para acciones y cero solicitudes al adaptador. |
+| Voz con escucha apagada | Modo `VOZ`, captura detenida | Resultado tardío del hilo de voz | Rechazo por generación/sesión de escucha inválida; no ejecuta. |
+| Manual durante acción | Solicitud pendiente del dominio | Cambiar a `MANUAL` | No cambiar modo ni activar entrada manual; mostrar acción pendiente. |
+| Transferencia válida | Sin acción pendiente, modo `VOZ` | Desactivar voz, esperar cierre confirmado de captura, cambiar a `MANUAL` | Modo visible y auditado; cualquier callback antiguo queda invalidado. |
+| Retorno a voz | Modo `MANUAL`, micrófono/modelo disponible | Cambiar a `VOZ` | La escucha permanece apagada hasta botón/F8; ninguna frase por sí sola la inicia. |
+| Otra sesión | Una confirmación o resultado asociado a sesión anterior | Resultado tardío o «confirmar» de sesión nueva | No autoriza ni completa la orden anterior; correlacionar `session_id` y `command_id`. |
+| Identidad ficticia | Sesión con ID y nombre de prueba | Voz de otra persona | El prototipo no puede atribuir autoría biométrica; la UI/bitácora debe decir «sesión de prueba» y no «voz verificada». |
+
+**Punto de integración:** el origen de la orden debe provenir del adaptador de entrada, no de texto que pueda pronunciarse. Una transcripción que diga «cambiar a modo manual» sigue siendo `source=voice`. El cambio requiere apagar captura y comprobar su cierre para evitar órdenes tardías. Si esa operación falla o expira, mantener el modo anterior o `DESHABILITADO` con mensaje explícito; nunca mostrar ambos canales habilitados.
