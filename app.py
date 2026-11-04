@@ -10,14 +10,14 @@ import os
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtWidgets import QApplication
 
-from faro.domain import FaroDomain, Mode, Source
+from faro.controller import FaroController
+from faro.domain import Mode, Source
 from faro.plan import load_demo_plan
 from faro.ui import FaroWindow
 from faro.voice import VoiceRecognizer
-from faro.voice_pipeline import VoicePipeline
 
 
 ROOT = Path(__file__).resolve().parent
@@ -33,10 +33,9 @@ class VoiceEvents(QObject):
 def main() -> int:
     app = QApplication(sys.argv)
     plan = load_demo_plan(ROOT / "fixtures" / "malla_demo.json")
-    domain = FaroDomain(plan)
+    controller = FaroController.create(plan, ROOT / "faro-audit.sqlite3")
+    domain = controller.domain
     session_id = "demo-session"
-    domain.begin_session(session_id, "Operador de prueba", Mode.MANUAL)
-    pipeline = VoicePipeline(plan, domain)
     window = FaroWindow()
     events = VoiceEvents()
 
@@ -73,8 +72,8 @@ def main() -> int:
     def handle_command(text: str, source: str = "text") -> None:
         input_source = Source.VOICE if source == "voice" else Source.TEXT
         generation = domain.session.generation if input_source is Source.VOICE else None
-        result = pipeline.process(text, source=input_source, session_id=session_id,
-                                  generation=generation, zone_clear=False)
+        result = controller.process(text, source=input_source, generation=generation,
+                                    zone_clear=False)
         ui_state["transcript"] = text
         if result.decision is None:
             accepted, intent, reason = False, result.parsed.intent or "desconocido", result.parsed.reason
@@ -122,6 +121,18 @@ def main() -> int:
     window.listening_toggled.connect(toggle_voice)
     events.result.connect(lambda text: handle_command(text, source="voice"))
     events.status.connect(handle_voice_status)
+    simulator_timer = QTimer(window)
+    simulator_timer.setInterval(100)
+
+    def advance_simulator() -> None:
+        event = controller.tick()
+        if event is not None:
+            ui_state["command_status"] = f"ejecución: {event.status.value}"
+            ui_state["decision"] = event.reason or event.status.value
+            render()
+
+    simulator_timer.timeout.connect(advance_simulator)
+    simulator_timer.start()
     app.aboutToQuit.connect(voice.stop)
     render()
     window.show()
