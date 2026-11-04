@@ -156,6 +156,8 @@ class FaroWindow(QWidget):
         self.decision_label = _label("Esperando una solicitud", "value")
         decision_layout.addWidget(self.transcript_label)
         decision_layout.addWidget(self.decision_label)
+        self.execution_status = _label("Estado de ejecución: en espera", "caption")
+        decision_layout.addWidget(self.execution_status)
         sidebar.addWidget(decision_card)
 
         history_card, history_layout = _card()
@@ -321,6 +323,14 @@ class FaroWindow(QWidget):
         decision = snapshot.get("decision")
         if decision is not None:
             self.decision_label.setText(str(decision) or "Esperando una solicitud")
+        command_status = snapshot.get("command_status")
+        if command_status is not None:
+            self.execution_status.setText(f"Estado de ejecución: {command_status}")
+        alert = snapshot.get("alert")
+        if isinstance(alert, Mapping):
+            reason = alert.get("reason", "revisión requerida")
+            blocking = " · BLOQUEANTE" if alert.get("blocking") else ""
+            self.execution_status.setText(f"Estado de ejecución: requiere revisión · {reason}{blocking}")
 
         workflow = snapshot.get("workflow", {})
         if isinstance(workflow, Mapping):

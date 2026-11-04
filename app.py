@@ -49,6 +49,7 @@ def main() -> int:
         "transcript": "",
         "decision": "Esperando una solicitud",
         "voice_status": "Micrófono inactivo",
+        "command_status": "en espera",
         "history": [],
     }
 
@@ -63,7 +64,8 @@ def main() -> int:
                 "workflow": {"active": domain.state.value not in {"sin_seleccion", "cerrado"},
                              "status": domain.state.value, "label": domain.state.value,
                              "total": len(plan.holes), "step": len(domain.completed_holes) + 1},
-                "history": ui_state["history"]}
+                "history": ui_state["history"],
+                "alert": vars(domain.alert) if domain.alert else None}
 
     def render() -> None:
         window.render_state({**snapshot(), **ui_state})
@@ -76,8 +78,10 @@ def main() -> int:
         ui_state["transcript"] = text
         if result.decision is None:
             accepted, intent, reason = False, result.parsed.intent or "desconocido", result.parsed.reason
+            ui_state["command_status"] = "rechazado / no interpretado"
         else:
             accepted, intent, reason = result.decision.accepted, result.parsed.intent or "desconocido", result.decision.reason
+            ui_state["command_status"] = "interpretado / aceptado" if accepted else "rechazado"
         ui_state["decision"] = reason
         ui_state["history"].append({"transcript": text, "intent": intent,
                                     "accepted": accepted, "decision": reason,
