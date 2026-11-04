@@ -17,6 +17,7 @@ los supuestos por requisitos y pruebas de ORICA.
 | I-08 | Una finalización que compite con una pausa queda en `RESULTADO_DESCONOCIDO`, nunca en éxito automático. | `test_completion_racing_with_pause_requires_reconciliation` | Cumple |
 | I-09 | Voz exige sesión activa, modo voz, escucha explícita y generación vigente; manual y voz no actúan simultáneamente. | `test_voice_mode_requires_explicit_listening_and_current_generation` | Cumple |
 | I-10 | Rechazo del simulador se reconcilia en el mismo ID y no deja una acción falsamente completada. | `test_rejected_submission_reconciles_domain_without_false_completion` | Cumple |
+| I-11 | Timeout configurable del simulador pasa a `RESULTADO_DESCONOCIDO`; no se reenvía ni se infiere éxito. | `test_timeout_is_conservative_and_does_not_complete`, `test_controller_timeout_is_audited_and_never_replayed` | Cumple |
 
 ## Pausa simulada frente a emergencia física
 

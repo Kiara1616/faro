@@ -66,6 +66,10 @@ class FaroController:
             SimStatus.FAILED: EventStatus.FAILED,
             SimStatus.CANCELLED: EventStatus.CANCELLED,
         }
+        if event.status is SimStatus.TIMEOUT:
+            self.domain.mark_unknown(event.command_id, event.reason or "simulator_timeout")
+            self.audit.record_event(event.command_id, event.status.value, event.reason)
+            return event
         if event.status in status_map:
             self.domain.apply_event(event.command_id, status_map[event.status])
             self.audit.record_event(event.command_id, event.status.value, event.reason)

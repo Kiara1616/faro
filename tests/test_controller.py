@@ -57,3 +57,18 @@ def test_voice_controller_uses_same_rules(tmp_path):
     generation = controller.domain.session.generation
     result = controller.process("Oye Faro, consultar estado", source=Source.VOICE, generation=generation)
     assert result.decision.accepted
+
+
+def test_controller_timeout_is_audited_and_never_replayed(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "audit.sqlite3")
+    controller.simulator.timeout_ticks = 1
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    assert controller.tick().status.value == "in_progress"
+    timeout = controller.tick()
+    assert timeout.status.value == "timeout"
+    assert controller.domain.state is State.RESULTADO_DESCONOCIDO
+    assert controller.tick() is None
+    assert any(row["event_status"] == "timeout" for row in controller.audit.list_records())

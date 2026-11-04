@@ -16,6 +16,7 @@ class SimStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    TIMEOUT = "timeout"
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class _Pending:
     ticks_left: int
     started: bool = False
     cancellation_requested: bool = False
+    elapsed_ticks: int = 0
 
 
 @dataclass
@@ -38,12 +40,15 @@ class SimulatedMMU:
     plan: DemoPlan
     delay_ticks: int = 1
     fail_actions: frozenset[str] = frozenset()
+    timeout_ticks: int | None = None
     _pending: _Pending | None = field(default=None, init=False, repr=False)
     _seen: set[str] = field(default_factory=set, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if type(self.delay_ticks) is not int or self.delay_ticks < 0:
             raise ValueError("delay_ticks must be a nonnegative integer")
+        if self.timeout_ticks is not None and (type(self.timeout_ticks) is not int or self.timeout_ticks <= 0):
+            raise ValueError("timeout_ticks must be a positive integer or None")
 
     @property
     def busy(self) -> bool:
@@ -94,6 +99,10 @@ class SimulatedMMU:
         if not pending.started:
             pending.started = True
             return SimEvent(pending.request.command_id, SimStatus.IN_PROGRESS)
+        pending.elapsed_ticks += 1
+        if self.timeout_ticks is not None and pending.elapsed_ticks >= self.timeout_ticks:
+            self._pending = None
+            return SimEvent(pending.request.command_id, SimStatus.TIMEOUT, "simulator_timeout")
         if pending.ticks_left > 0:
             pending.ticks_left -= 1
             return None

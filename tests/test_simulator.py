@@ -113,3 +113,25 @@ def test_rejected_cancellation_keeps_result_unknown():
     assert domain.state is State.RESULTADO_DESCONOCIDO
     assert domain.pending is None
     assert not domain.apply_event(action.command_id, EventStatus.COMPLETED)
+
+
+def test_timeout_is_conservative_and_does_not_complete():
+    plan = load_demo_plan(FIXTURE)
+    domain = FaroDomain(plan)
+    for command in (
+        Command(Intent.SELECCIONAR_TALADRO, hole_id="101"),
+        Command(Intent.CONSULTAR_TALADRO, hole_id="101"),
+        Command(Intent.PREPARAR_CARGA),
+        Command(Intent.DECLARAR_PLAN, product="producto alfa", kg=100),
+    ):
+        assert domain.handle(command).accepted
+    simulator = SimulatedMMU(plan, delay_ticks=10, timeout_ticks=2)
+    decision = domain.handle(Command(Intent.EXTENDER_BRAZO, zone_clear=True))
+    assert simulator.submit(decision.request).status is SimStatus.ACCEPTED
+    assert simulator.tick().status is SimStatus.IN_PROGRESS
+    assert simulator.tick() is None
+    timeout = simulator.tick()
+    assert timeout.status is SimStatus.TIMEOUT
+    assert domain.mark_unknown(timeout.command_id, timeout.reason)
+    assert domain.state is State.RESULTADO_DESCONOCIDO
+    assert not domain.apply_event(timeout.command_id, EventStatus.COMPLETED)

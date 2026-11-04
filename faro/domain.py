@@ -457,3 +457,14 @@ class FaroDomain:
         self.last_failure_reason = reason
         self.state = State.RESULTADO_DESCONOCIDO
         return True
+
+    def mark_unknown(self, command_id: str, reason: str) -> bool:
+        """Conservatively stop a request whose simulator outcome timed out."""
+        if (self.pending is None or self.pending.command_id != command_id
+                or not isinstance(reason, str) or not reason.strip()):
+            return False
+        self.pending = None
+        self.cancel_requested = False
+        self.last_failure_reason = reason
+        self.state = State.RESULTADO_DESCONOCIDO
+        return True
