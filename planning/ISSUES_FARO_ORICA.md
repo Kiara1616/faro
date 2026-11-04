@@ -147,10 +147,10 @@
 ### F-06 · Excepciones de taladro, cantidad y mezcla
 
 **Objetivo:** reflejar los desvíos de campo mencionados por ORICA sin inventar autorización.
-**Trabajo:** detectar ID distinto, cantidad/mezcla divergente, taladro bloqueado o dato faltante. Abrir un estado de excepción; registrar causa y bloquear carguío simulado hasta que un flujo ficticio explícito lo resuelva.
+**Trabajo:** detectar ID distinto, cantidad/mezcla divergente, taladro bloqueado, método incompatible o dato faltante. Crear una alerta separada sin mutar el estado operativo rechazado y registrar causa, plan y valor recibido. ID/dato/método erróneo generan alerta transitoria y permiten corregir la entrada; producto o kg divergentes generan alerta bloqueante del taladro hasta una declaración ficticia completa y exacta. Un taladro bloqueado se rechaza al seleccionarlo y permite elegir otro.
 **Cierre:** cada excepción se reproduce con un caso y queda claro en pantalla si se requiere revisión humana. El prototipo no trata un «sí» de voz como autorización industrial.
 
-**Entregable verificable:** Estados y mensajes de excepción para ID, kg, mezcla, dato faltante, bloqueo y método.
+**Entregable verificable:** Alertas y mensajes de excepción para ID, kg, mezcla, dato faltante, bloqueo y método, con ruta de resolución por causa.
 
 **Criterios de aceptación detallados:** Ninguna discrepancia alcanza cargado; se ve plan y valor recibido; un sí de voz no autoriza cambio; corrección ficticia no reanuda orden antigua.
 
