@@ -34,6 +34,15 @@ Si el entorno ya está preparado, basta el último comando. El modelo español q
 
 Para usar un modelo en otra carpeta, configure `FARO_VOSK_MODEL` con su ruta antes de abrir la aplicación. Si no hay micrófono o modelo, la entrada escrita sigue disponible para demostrar las reglas. El botón **Activar escucha** inicia el micrófono; **Detener escucha** lo apaga.
 
+Antes de una demostración sin red, ejecute el diagnóstico local (no descarga ni contacta servicios externos):
+
+```powershell
+.\.venv\Scripts\python.exe scripts\diagnose_offline.py
+.\.venv\Scripts\python.exe scripts\diagnose_offline.py --json  # evidencia para el acta
+```
+
+El diagnóstico identifica Python/Windows, malla, modelo, dependencias y micrófonos. La ausencia de modelo, Vosk o micrófono deja disponible la entrada escrita; para abrir la consola gráfica sí se requiere PySide6.
+
 Para elegir un auricular o micrófono externo, liste los dispositivos y establezca el índice antes de iniciar la aplicación:
 
 ```powershell
