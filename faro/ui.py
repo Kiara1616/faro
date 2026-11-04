@@ -77,7 +77,7 @@ class FaroWindow(QWidget):
         title_group.setSpacing(3)
         title_group.addWidget(_label("FARO  /  V1", "title"))
         title_group.addWidget(
-            _label("Consola de interacción operacional · Prototipo académico", "subtitle")
+            _label("Consola de operación por taladro · Prototipo académico", "subtitle")
         )
         header.addLayout(title_group, 1)
         self.connection_badge = _label("SIMULACIÓN - SIN CONEXIÓN A EQUIPO", "badge")
@@ -96,7 +96,7 @@ class FaroWindow(QWidget):
         nav = QHBoxLayout()
         nav.setSpacing(4)
         self.nav_labels = []
-        for text in ("ESTADO GENERAL", "INDICADORES", "REVISIÓN AUXILIAR"):
+        for text in ("OPERACIÓN POR TALADRO", "PLAN FICTICIO", "REGISTRO"):
             item = _label(text, "nav")
             item.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.nav_labels.append(item)
@@ -113,8 +113,8 @@ class FaroWindow(QWidget):
         hint_layout.addWidget(_label("COMANDOS DE DEMOSTRACIÓN", "eyebrow"))
         hint_layout.addWidget(
             _label(
-                "Iniciar revisión auxiliar  /  Consultar temperatura  /  "
-                "Registrar temperatura 42 grados  /  Confirmar paso"
+                "Seleccionar taladro 101  /  Consultar plan  /  Preparar carga  /  "
+                "Validar producto alfa, cien kilos  /  Extender brazo"
             )
         )
         main_column.addWidget(hint_card)
@@ -180,10 +180,10 @@ class FaroWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
         title_card, title_layout = _card()
-        title_layout.addWidget(_label("ESTADO GENERAL DEL SIMULADOR", "eyebrow"))
-        title_layout.addWidget(_label("Unidad de demostración", "page-title"))
+        title_layout.addWidget(_label("OPERACIÓN POR TALADRO · SIMULACIÓN", "eyebrow"))
+        title_layout.addWidget(_label("Unidad móvil ficticia", "page-title"))
         title_layout.addWidget(
-            _label("Esta consola representa un flujo auxiliar ficticio; sus datos no provienen de maquinaria real.", "caption")
+            _label("La malla, el plan y los sensores son ficticios; no existe conexión con maquinaria real.", "caption")
         )
         layout.addWidget(title_card)
         self.status_card, status_layout = _card()
@@ -193,6 +193,25 @@ class FaroWindow(QWidget):
         self.workflow_detail = _label("Puede iniciar una revisión auxiliar.", "caption")
         status_layout.addWidget(self.workflow_detail)
         layout.addWidget(self.status_card)
+        operation_card, operation_layout = _card()
+        operation_layout.addWidget(_label("TALADRO Y PLAN ACTIVO", "eyebrow"))
+        self.operation_labels = {}
+        operation_row = QHBoxLayout()
+        for key, title in (("hole_id", "TALADRO"), ("product", "PRODUCTO"),
+                           ("planned_kg", "KG PREVISTOS"), ("delivery_method", "MÉTODO")):
+            metric = QFrame()
+            metric.setObjectName("metric")
+            metric_layout = QVBoxLayout(metric)
+            metric_layout.setContentsMargins(10, 8, 10, 8)
+            metric_layout.addWidget(_label(title, "eyebrow"))
+            value = _label("—", "value")
+            metric_layout.addWidget(value)
+            self.operation_labels[key] = value
+            operation_row.addWidget(metric, 1)
+        operation_layout.addLayout(operation_row)
+        self.session_label = _label("Sesión: no iniciada · Modo: deshabilitado", "caption")
+        operation_layout.addWidget(self.session_label)
+        layout.addWidget(operation_card)
         summary_card, summary_layout = _card()
         summary_layout.addWidget(_label("RESUMEN DE LECTURAS SIMULADAS", "eyebrow"))
         summary_row = QHBoxLayout()
@@ -330,6 +349,18 @@ class FaroWindow(QWidget):
             self.review_progress.setText(
                 str(progress) if isinstance(progress, str) else f"{progress} de {total} pasos completados"
             )
+
+        operation = snapshot.get("operation", {})
+        if isinstance(operation, Mapping):
+            for key, label in self.operation_labels.items():
+                value = operation.get(key, "—")
+                label.setText("—" if value in (None, "") else str(value))
+            session = snapshot.get("session", {})
+            if isinstance(session, Mapping):
+                mode = session.get("mode", "deshabilitado")
+                operator = session.get("operator_label") or "no iniciada"
+                listening = " · escucha activa" if session.get("listening") else ""
+                self.session_label.setText(f"Sesión: {operator} · Modo: {mode}{listening}")
 
         indicators = snapshot.get("indicators", {})
         if isinstance(indicators, Mapping):
