@@ -81,6 +81,26 @@ class Decision:
     state_after: State
     hole_id: str | None
     request: ActionRequest | None = None
+    alert_before: Alert | None = None
+    alert_after: Alert | None = None
+
+
+@dataclass(frozen=True)
+class Alert:
+    """An exception for human review, separate from operational state."""
+
+    reason: str
+    hole_id: str | None
+    expected_hole_id: str | None = None
+    received_hole_id: str | None = None
+    expected_product: str | None = None
+    received_product: str | None = None
+    expected_kg: int | None = None
+    received_kg: int | None = None
+    expected_method: str | None = None
+    received_method: str | None = None
+    requires_human: bool = False
+    blocking: bool = False
 
 
 @dataclass
@@ -93,6 +113,8 @@ class FaroDomain:
     cancel_requested: bool = False
     expected_next_hole_id: str | None = None
     last_failure_reason: str | None = None
+    alert: Alert | None = None
+    alert_history: list[Alert] = field(default_factory=list)
     completed_holes: set[str] = field(default_factory=set)
 
     @property
@@ -110,13 +132,58 @@ class FaroDomain:
     def handle(self, command: Command) -> Decision:
         before = self.state
         command_id = uuid4().hex
+        alert_before = self.alert
+
+        def raise_alert(reason: str) -> None:
+            hole = self.selected_hole
+            attempted_id = command.hole_id if isinstance(command.hole_id, str) else None
+            method = ("brazo" if command.intent in {Intent.EXTENDER_BRAZO, Intent.RETRAER_BRAZO}
+                      else "manguera" if command.intent in {Intent.EXTENDER_MANGUERA, Intent.RETRAER_MANGUERA}
+                      else None)
+            alert = Alert(
+                reason=reason,
+                hole_id=hole.id if hole else attempted_id,
+                expected_hole_id=self.expected_next_hole_id or self.selected_hole_id,
+                received_hole_id=attempted_id,
+                expected_product=hole.product if hole else None,
+                received_product=command.product if isinstance(command.product, str) else None,
+                expected_kg=hole.planned_kg if hole else None,
+                received_kg=command.kg if type(command.kg) is int else None,
+                expected_method=hole.delivery_method if hole else None,
+                received_method=method,
+                requires_human=reason == "plan_mismatch",
+                blocking=reason == "plan_mismatch",
+            )
+            self.alert = alert
+            self.alert_history.append(alert)
 
         def reject(reason: str) -> Decision:
-            return Decision(False, reason, command_id, before, self.state, self.selected_hole_id)
+            if self.alert is not None and self.alert.blocking and reason == "invalid_plan_values":
+                # An incomplete correction must not downgrade a blocking alert.
+                pass
+            elif reason in {"unknown_hole", "hole_blocked", "hole_mismatch",
+                          "next_hole_mismatch", "invalid_plan_values", "plan_mismatch",
+                          "wrong_delivery_method"}:
+                raise_alert(reason)
+            return Decision(False, reason, command_id, before, self.state,
+                            self.selected_hole_id, alert_before=alert_before,
+                            alert_after=self.alert)
 
         def accept(reason: str, request: ActionRequest | None = None) -> Decision:
+            correction = {
+                "unknown_hole": {Intent.SELECCIONAR_TALADRO},
+                "hole_blocked": {Intent.SELECCIONAR_TALADRO},
+                "next_hole_mismatch": {Intent.SELECCIONAR_TALADRO},
+                "hole_mismatch": {Intent.CONSULTAR_TALADRO},
+                "invalid_plan_values": {Intent.DECLARAR_PLAN},
+                "plan_mismatch": {Intent.DECLARAR_PLAN},
+                "wrong_delivery_method": {Intent.EXTENDER_BRAZO, Intent.EXTENDER_MANGUERA,
+                                          Intent.RETRAER_BRAZO, Intent.RETRAER_MANGUERA},
+            }
+            if self.alert is not None and command.intent in correction.get(self.alert.reason, set()):
+                self.alert = None
             return Decision(True, reason, command_id, before, self.state,
-                            self.selected_hole_id, request)
+                            self.selected_hole_id, request, alert_before, self.alert)
 
         if not isinstance(command.intent, Intent):
             return reject("unknown_intent")
@@ -134,6 +201,13 @@ class FaroDomain:
                 target_command_id=self.pending.command_id))
         if self.pending is not None:
             return reject("action_in_progress")
+        if self.alert is not None and self.alert.blocking:
+            correction = {
+                "plan_mismatch": Intent.DECLARAR_PLAN,
+            }
+            allowed = correction[self.alert.reason]
+            if intent != allowed:
+                return reject("alert_pending")
 
         if intent is Intent.SELECCIONAR_TALADRO:
             if self.state not in {State.SIN_SELECCION, State.CERRADO}:
@@ -205,8 +279,10 @@ class FaroDomain:
             return accept("submitted", request)
         if intent in {Intent.RETRAER_BRAZO, Intent.RETRAER_MANGUERA}:
             method = "brazo" if intent is Intent.RETRAER_BRAZO else "manguera"
-            if self.state is not State.CARGADO or hole.delivery_method != method:
-                return reject("wrong_state_or_method")
+            if self.state is not State.CARGADO:
+                return reject("wrong_state")
+            if hole.delivery_method != method:
+                return reject("wrong_delivery_method")
             request = ActionRequest(command_id, hole.id, intent.value)
             self.pending = request
             self.state = State.RETRACCION_EN_CURSO

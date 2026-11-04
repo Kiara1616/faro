@@ -193,3 +193,77 @@ def test_blocked_hole_and_skipping_next_hole_are_rejected():
     before = ordered.snapshot()
     assert not send(ordered, Intent.SELECCIONAR_TALADRO, hole_id="103").accepted
     assert ordered.snapshot() == before
+
+
+def test_id_and_blocked_hole_alerts_are_transient_and_correctable():
+    domain = engine()
+    operational = domain.snapshot()
+    bad = send(domain, Intent.SELECCIONAR_TALADRO, hole_id="999")
+    assert not bad.accepted and domain.snapshot() == operational
+    assert bad.alert_after.received_hole_id == "999"
+    assert not bad.alert_after.blocking
+    blocked = send(domain, Intent.SELECCIONAR_TALADRO, hole_id="103")
+    assert not blocked.accepted and domain.snapshot() == operational
+    assert blocked.alert_after.reason == "hole_blocked"
+    assert send(domain, Intent.SELECCIONAR_TALADRO, hole_id="101").accepted
+    assert domain.alert is None
+    wrong = send(domain, Intent.CONSULTAR_TALADRO, hole_id="102")
+    assert not wrong.accepted and wrong.alert_after.expected_hole_id == "101"
+    assert domain.state is State.SELECCIONADO
+    corrected = send(domain, Intent.CONSULTAR_TALADRO, hole_id="101")
+    assert corrected.accepted and corrected.alert_before.reason == "hole_mismatch"
+    assert corrected.alert_after is None
+    assert len(domain.alert_history) == 3
+
+
+def test_missing_values_are_transient_but_plan_divergence_blocks_until_exact_retry():
+    domain = engine()
+    assert send(domain, Intent.SELECCIONAR_TALADRO, hole_id="101").accepted
+    assert send(domain, Intent.CONSULTAR_TALADRO, hole_id="101").accepted
+    assert send(domain, Intent.PREPARAR_CARGA).accepted
+    operational = domain.snapshot()
+    missing = send(domain, Intent.DECLARAR_PLAN, product="producto alfa")
+    assert not missing.accepted and domain.snapshot() == operational
+    assert missing.alert_after.reason == "invalid_plan_values"
+    assert missing.alert_after.received_kg is None
+    assert not missing.alert_after.blocking
+    divergent = send(domain, Intent.DECLARAR_PLAN, product="producto beta", kg=101)
+    assert not divergent.accepted and domain.snapshot() == operational
+    alert = divergent.alert_after
+    assert alert.blocking and alert.requires_human
+    assert (alert.expected_product, alert.expected_kg) == ("producto alfa", 100)
+    assert (alert.received_product, alert.received_kg) == ("producto beta", 101)
+    partial = send(domain, Intent.DECLARAR_PLAN, product="producto alfa")
+    assert not partial.accepted and partial.alert_after == alert
+    assert domain.alert.blocking
+    denied = send(domain, Intent.EXTENDER_BRAZO, zone_clear=True)
+    assert not denied.accepted and denied.reason == "alert_pending"
+    assert denied.request is None and domain.snapshot() == operational
+    corrected = send(domain, Intent.DECLARAR_PLAN, product="producto alfa", kg=100)
+    assert corrected.accepted and corrected.alert_before == alert
+    assert corrected.alert_after is None and domain.pending is None
+    assert domain.plan_validated
+    assert send(domain, Intent.EXTENDER_BRAZO, zone_clear=True).request is not None
+
+
+def test_method_mismatch_alert_does_not_authorize_movement_or_load():
+    domain = engine()
+    prepared(domain)
+    before = domain.snapshot()
+    wrong = send(domain, Intent.EXTENDER_MANGUERA, zone_clear=True)
+    assert not wrong.accepted and domain.snapshot() == before
+    assert wrong.alert_after.expected_method == "brazo"
+    assert wrong.alert_after.received_method == "manguera"
+    assert not wrong.alert_after.blocking
+    assert not send(domain, Intent.INICIAR_CARGA).accepted
+    right = send(domain, Intent.EXTENDER_BRAZO, zone_clear=True)
+    assert right.accepted and right.alert_after is None
+    complete(domain, right.request)
+    complete(domain, send(domain, Intent.INICIAR_CARGA).request)
+    before = domain.snapshot()
+    wrong_retract = send(domain, Intent.RETRAER_MANGUERA)
+    assert not wrong_retract.accepted and domain.snapshot() == before
+    assert wrong_retract.alert_after.reason == "wrong_delivery_method"
+    corrected_retract = send(domain, Intent.RETRAER_BRAZO)
+    assert corrected_retract.request is not None
+    assert corrected_retract.alert_after is None
