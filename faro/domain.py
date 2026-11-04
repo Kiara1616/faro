@@ -158,12 +158,12 @@ class FaroDomain:
             self.alert_history.append(alert)
 
         def reject(reason: str) -> Decision:
-            if self.alert is not None and self.alert.blocking and reason == "invalid_plan_values":
-                # An incomplete correction must not downgrade a blocking alert.
-                pass
-            elif reason in {"unknown_hole", "hole_blocked", "hole_mismatch",
-                          "next_hole_mismatch", "invalid_plan_values", "plan_mismatch",
-                          "wrong_delivery_method"}:
+            alert_reasons = {"unknown_hole", "hole_blocked", "hole_mismatch",
+                             "next_hole_mismatch", "invalid_plan_values", "plan_mismatch",
+                             "wrong_delivery_method"}
+            incomplete_correction = (self.alert is not None and self.alert.blocking
+                                     and reason == "invalid_plan_values")
+            if reason in alert_reasons and not incomplete_correction:
                 raise_alert(reason)
             return Decision(False, reason, command_id, before, self.state,
                             self.selected_hole_id, alert_before=alert_before,
