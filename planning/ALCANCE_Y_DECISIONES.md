@@ -29,12 +29,13 @@ Faro v1 representa ese trabajo mediante **una consola y una MMU simuladas** en u
 flowchart TD
     A[Sesión y modo habilitado] --> B[Seleccionar taladro ficticio]
     B --> C[Consultar plan: ID, mezcla, kg, método]
-    C --> D{¿Coinciden ID, datos y estado?}
+    C --> D{¿Coinciden ID y estado del taladro?}
     D -- No --> X[Rechazar y mostrar excepción]
-    X --> Y[Revisión humana simulada o corrección de entrada]
+    X --> Y[Corregir datos ficticios o elegir otro taladro]
+    Y --> B
     Y --> C
-    D -- Sí --> E[Preparar método de entrega]
-    E --> F{¿Zona ficticia despejada y orden permitida?}
+    D -- Sí --> E[Preparar método y validar producto y kg]
+    E --> F{¿Datos validados, zona ficticia despejada y orden permitida?}
     F -- No --> X
     F -- Sí --> G[Confirmación de prototipo cuando aplique]
     G --> H[Solicitar acción al adaptador simulado]
@@ -48,9 +49,9 @@ El diagrama resume el producto; F-02 fijará el orden exacto de cada comando y F
 
 ## Guiones verificables
 
-**Caso normal:** iniciar sesión ficticia; elegir modo voz o manual de prueba; seleccionar un taladro válido; consultar ID, producto y kg; preparar el método; comprobar zona ficticia despejada; solicitar movimiento; observar `aceptada → en curso → completada`; validar datos; ejecutar carga simulada; retraer; cerrar; pasar a otro taladro. En cada paso la UI debe mostrar el estado confirmado y la bitácora debe conservar el mismo ID de comando.
+**Caso normal:** iniciar sesión ficticia; elegir modo voz o manual de prueba; seleccionar un taladro válido; consultar ID, producto y kg; preparar el método; **validar producto y kg contra el plan antes del movimiento**; comprobar zona ficticia despejada; solicitar movimiento; observar `aceptada → en curso → completada`; ejecutar carga simulada; retraer; cerrar; pasar a otro taladro. En cada paso la UI debe mostrar el estado confirmado y la bitácora debe conservar el ID de cada comando y sus eventos correspondientes.
 
-**Excepción de plan:** seleccionar un taladro válido y dictar kg o mezcla distintos del plan. Faro muestra valor recibido y plan, rechaza la carga, registra el motivo y entra en revisión. Repetir «sí» o «cargar» no libera el bloqueo. Solo una corrección ficticia conforme a F-02 puede volver a la validación; ningún dato de ORICA se modifica.
+**Excepción de plan:** seleccionar un taladro válido y dictar kg o mezcla distintos del plan. Faro muestra valor recibido y plan, rechaza la carga y registra el motivo **sin avanzar el estado operativo**. La discrepancia queda como alerta pendiente. Repetir «sí» o «cargar» no libera el bloqueo; una nueva declaración que coincida exactamente con el plan ficticio puede resolver la alerta y volver a la validación. Ningún dato de ORICA se modifica.
 
 **Excepción de ejecución:** con una solicitud aceptada, el adaptador simulado demora o falla. Faro mantiene «en curso» o «requiere revisión» y no anuncia éxito. Una respuesta tardía con otro ID no cambia el taladro activo. Esta prueba pertenece a F-05 y F-23.
 

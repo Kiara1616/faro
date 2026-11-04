@@ -12,26 +12,26 @@ El parser puede quitar el prefijo inicial «Oye Faro» o «Faro» únicamente si
 
 `hole_id` es un ID del fixture local, pronunciado o escrito completo. `product` coincide con uno de los nombres de la malla ficticia. `kg` es entero positivo con unidad explícita «kilos»/«kilogramos»; no se aceptan decimales en v1. Esta restricción es de parser de prototipo, pendiente de vocabulario real. Para comparar se exige igualdad exacta con el fixture; no se inventa tolerancia de campo.
 
-Estados de tarea: `SIN_SELECCION`, `CONSULTADO`, `PREPARADO`, `CONFIRMACION_PENDIENTE`, `MOVIMIENTO_EN_CURSO`, `POSICIONADO`, `CARGA_EN_CURSO`, `CARGADO`, `RETRACCION_EN_CURSO`, `RETRAIDO`, `CERRADO`, `EXCEPCION`, `RESULTADO_DESCONOCIDO`. Los eventos de F-05 determinarán cuándo termina una acción. El modo de sesión es independiente: `VOZ`, `MANUAL`, `DESHABILITADO`.
+Estados de tarea: `SIN_SELECCION`, `SELECCIONADO`, `CONSULTADO`, `PREPARADO`, `CONFIRMACION_PENDIENTE`, `MOVIMIENTO_EN_CURSO`, `POSICIONADO`, `CARGA_EN_CURSO`, `CARGADO`, `RETRACCION_EN_CURSO`, `RETRAIDO`, `CERRADO`, `RESULTADO_DESCONOCIDO`. Una discrepancia o bloqueo rechazado se registra como **alerta pendiente separada** y no cambia el estado operativo. Los eventos de F-05 determinarán cuándo termina una acción. El modo de sesión es independiente: `VOZ`, `MANUAL`, `DESHABILITADO`.
 
 ## Matriz de intenciones
 
 | Intención / frase canónica | Argumentos | Estados previos y condición | Efecto tras validación o evento | Confirmación | Rechazo específico |
 | --- | --- | --- | --- | --- | --- |
 | `consultar_estado` / «consultar estado» | Ninguno | Sesión activa, cualquier estado | Solo lectura del taladro, modo, acción y último resultado. | No | Sin sesión → «Inicie sesión ficticia». |
-| `seleccionar_taladro` / «seleccionar taladro 101» | `hole_id` | Sin acción pendiente; ID existente y no cerrado | Selecciona ID, aún no habilita movimiento/carga. | No | ID desconocido, cerrado u otra acción activa. |
+| `seleccionar_taladro` / «seleccionar taladro 101» | `hole_id` | `SIN_SELECCION`; ID existente, no bloqueado ni cerrado; si se pidió siguiente, debe ser el ID anunciado | Marca `SELECCIONADO`; aún no habilita movimiento/carga. | No | ID desconocido, bloqueado, cerrado, distinto del siguiente anunciado o ciclo anterior sin cerrar. |
 | `consultar_taladro` / «consultar taladro 101» | `hole_id` | Debe ser el seleccionado; sin acción pendiente | Muestra plan y marca `CONSULTADO`. | No | ID distinto → mostrar actual y pedir selección explícita. |
 | `consultar_plan` / «consultar plan» | Ninguno | Taladro seleccionado | Solo lectura de producto, kg y método previstos. | No | Sin taladro → pedir selección. |
-| `preparar_carga` / «preparar carga» | Ninguno | `CONSULTADO`, plan íntegro, taladro no bloqueado | Marca `PREPARADO`; no mueve ni carga. | No | Plan ausente/bloqueado → `EXCEPCION`. |
-| `declarar_plan` / «validar producto alfa, 100 kilos» | `product`, `kg` | `PREPARADO`; taladro activo | Compara ambos con el plan; igualdad marca datos validados; discrepancia abre `EXCEPCION`. | No | Producto, kg o unidad ausente/diferente → no cargar. |
+| `preparar_carga` / «preparar carga» | Ninguno | `CONSULTADO`, plan íntegro, taladro no bloqueado | Marca `PREPARADO`; no mueve ni carga. | No | Plan ausente/bloqueado → alerta pendiente; estado operativo intacto. |
+| `declarar_plan` / «validar producto alfa, 100 kilos» | `product`, `kg` | `PREPARADO`; taladro activo | Compara ambos con el plan; igualdad marca datos validados y resuelve alerta previa de discrepancia; divergencia crea alerta sin avanzar. | No | Producto, kg o unidad ausente/diferente → no cargar. |
 | `extender_brazo` / «extender brazo» | Ninguno | `PREPARADO`, método brazo, datos validados, zona ficticia despejada | Solicitud al simulador; `POSICIONADO` solo tras `completed`. | Sí | Método distinto, zona ocupada, acción pendiente o estado incorrecto. |
 | `extender_manguera` / «extender manguera» | Ninguno | Igual, con método manguera | Igual. | Sí | Igual. |
-| `iniciar_carga` / «iniciar carga» | Ninguno | `POSICIONADO`, plan validado, sin excepción ni acción activa | Solicitud de carga simulada; `CARGADO` solo tras `completed`. | Sí | Datos divergentes o movimiento incompleto → no solicitar. |
+| `iniciar_carga` / «iniciar carga» | Ninguno | `POSICIONADO`, plan validado, sin alerta pendiente ni acción activa | Solicitud de carga simulada; `CARGADO` solo tras `completed`. | Sí | Datos divergentes o movimiento incompleto → no solicitar. |
 | `pausar` / «pausar» | Ninguno | Movimiento/carga/retracción en curso | Pide cancelación simulada; estado queda en revisión hasta evento de cancelación. | No | Sin acción activa → informar sin cambiar estado. |
 | `retraer_brazo` / «retraer brazo» | Ninguno | `CARGADO`, método brazo, sin acción activa | Solicitud; `RETRAIDO` tras `completed`. | Sí | Método/estado incorrecto. |
 | `retraer_manguera` / «retraer manguera» | Ninguno | `CARGADO`, método manguera, sin acción activa | Igual. | Sí | Igual. |
-| `cerrar_taladro` / «cerrar taladro» | Ninguno | `RETRAIDO`, sin excepción ni acción activa | Marca `CERRADO`; audita cierre. | No | Retracción pendiente o fallo → no cerrar. |
-| `siguiente_taladro` / «siguiente taladro» | Ninguno | `CERRADO` y existe siguiente ID del fixture | Deja el siguiente ID listo para selección explícita; no lo activa automáticamente. | No | Taladro actual no cerrado o fin de malla. |
+| `cerrar_taladro` / «cerrar taladro» | Ninguno | `RETRAIDO`, sin alerta pendiente ni acción activa | Marca `CERRADO`; audita cierre. | No | Retracción pendiente o fallo → no cerrar. |
+| `siguiente_taladro` / «siguiente taladro» | Ninguno | `CERRADO` y existe un siguiente ID no bloqueado del fixture | Anuncia el siguiente ID operable y deja estado `SIN_SELECCION` para seleccionarlo explícitamente; informa los IDs bloqueados que omitió y conserva historial. | No | Taladro actual no cerrado o no quedan taladros operables; conservar `CERRADO`. |
 | `cancelar_confirmacion` / «cancelar» | Ninguno | `CONFIRMACION_PENDIENTE` | Descarta la solicitud sin tocar estado operacional. | No | Sin confirmación → solo informa. |
 | `confirmar` / «confirmar» | Ninguno | Confirmación vigente, mismos ID/plan/modo/sesión, ninguna otra acción | Envía exactamente una solicitud correlacionada al adaptador. | No | Vencida o contexto cambiado → descartar y repetir orden original. |
 | `modo_manual` / «cambiar a modo manual» | Ninguno | Sin acción activa o tras recuperación explícita | Apaga escucha antes de habilitar entrada manual simulada. | No | Acción pendiente → bloquear transferencia y mostrar estado. |
@@ -41,8 +41,8 @@ Los IDs, «producto alfa» y «100 kilos» de ejemplo son ficticios. F-03 fijar�
 
 ## Reglas generales de rechazo y mensajes
 
-1. `unknown/ambiguous`, sesión inválida, modo incorrecto, taladro distinto, valor faltante, estado prohibido, excepción pendiente o acción en curso producen `accepted=false`, código de motivo y **cero solicitudes** al adaptador.
-2. Un rechazo no modifica estado operacional. Se permite guardar el intento y mostrar una alerta. Si un dato coincide parcialmente, no se completa el argumento con el plan.
+1. `unknown/ambiguous`, sesión inválida, modo incorrecto, taladro distinto, valor faltante, estado prohibido, alerta pendiente o acción en curso producen `accepted=false`, código de motivo y **cero solicitudes** al adaptador. Con una alerta de discrepancia se permiten consultas de solo lectura y una nueva declaración completa del plan ficticio para corregir el dato; las acciones de movimiento o carga siguen bloqueadas.
+2. Un rechazo no modifica estado operacional. Se permite guardar el intento y mostrar una alerta separada. Si un dato coincide parcialmente, no se completa el argumento con el plan. Un taladro bloqueado en el fixture se rechaza al seleccionarlo, de modo que la sesión puede seleccionar otro ID válido sin quedar atrapada en el ciclo.
 3. Cada decisión expone `command_id`, intención, argumentos, `state_before`, `state_after`, motivo y mensaje. Una solicitud aceptada puede pasar a `in_progress`; «completado» requiere evento final con el mismo ID.
 4. La confirmación vence tras un plazo configurable, propuesto inicialmente de 10 segundos para pruebas. Al vencer, se elimina la solicitud pendiente; confirmar tarde no reenvía.
 5. Un timeout del adaptador lleva a `RESULTADO_DESCONOCIDO`. Bloquea órdenes dependientes hasta revisión manual simulada; no se interpreta como éxito ni se reintenta automáticamente.
