@@ -58,3 +58,5 @@ Al revisar `faro/domain.py` durante F-04, el motor todavía recibe una `Command`
 | Identidad ficticia | Sesión con ID y nombre de prueba | Voz de otra persona | El prototipo no puede atribuir autoría biométrica; la UI/bitácora debe decir «sesión de prueba» y no «voz verificada». |
 
 **Punto de integración:** el origen de la orden debe provenir del adaptador de entrada, no de texto que pueda pronunciarse. Una transcripción que diga «cambiar a modo manual» sigue siendo `source=voice`. El cambio requiere apagar captura y comprobar su cierre para evitar órdenes tardías. Si esa operación falla o expira, mantener el modo anterior o `DESHABILITADO` con mensaje explícito; nunca mostrar ambos canales habilitados.
+
+F-07 implementa esta frontera con `session_id`, `mode`, `listening` y `generation`. La entrada `text` solo representa un control manual de prueba explícito; no habilita el micrófono. La revisión final aún debe comprobar que UI, ASR y bitácora usen esta frontera, no llamadas directas a `handle`.

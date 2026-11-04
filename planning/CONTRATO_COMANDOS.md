@@ -6,6 +6,8 @@
 
 La entrada es `{source: voice|text, transcript, session_id, timestamp}`. `voice` se procesa solo con escucha y modo voz activos; `text` es el control manual simulado o una herramienta de prueba. Ambos producen la misma intención tipada o `unknown/ambiguous`; ninguno llama directamente al adaptador. La sesión y el estado se verifican de nuevo **al confirmar** una acción.
 
+F-07 añade una frontera obligatoria antes del motor: `Session(session_id, operator_label, mode, listening, generation)`. La etiqueta de operador es ficticia y no es autenticación biométrica. `voice` exige `mode=VOZ`, `listening=true` y la misma `generation` de captura; una respuesta de un hilo antiguo se rechaza. `text` es una entrada manual de prueba explícita y no enciende el micrófono. Cambiar a `MANUAL` o `DESHABILITADO` apaga la escucha y aumenta la generación; cambiar de modo mientras existe una acción pendiente se rechaza.
+
 El parser puede quitar el prefijo inicial «Oye Faro» o «Faro» únicamente si la escucha ya fue activada por botón/F8. Normaliza mayúsculas, espacios y acentos, pero conserva transcripción original en auditoría. Solo admite variantes enumeradas; no usa similitud, LLM ni valores inferidos. Una frase con dos intenciones, negación o palabras adicionales de acción se rechaza completa.
 
 ## Datos y estados comunes

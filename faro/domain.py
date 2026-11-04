@@ -53,6 +53,29 @@ class EventStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class Mode(str, Enum):
+    VOZ = "voz"
+    MANUAL = "manual"
+    DESHABILITADO = "deshabilitado"
+
+
+class Source(str, Enum):
+    VOICE = "voice"
+    TEXT = "text"
+
+
+@dataclass
+class Session:
+    """Fictitious operator session; it is not voice biometric authentication."""
+
+    session_id: str
+    operator_label: str
+    mode: Mode = Mode.MANUAL
+    listening: bool = False
+    generation: int = 0
+    transfers: list[tuple[Mode, Mode, int]] = field(default_factory=list)
+
+
 @dataclass(frozen=True)
 class Command:
     intent: Intent
@@ -106,6 +129,7 @@ class Alert:
 @dataclass
 class FaroDomain:
     plan: DemoPlan
+    session: Session | None = None
     state: State = State.SIN_SELECCION
     selected_hole_id: str | None = None
     plan_validated: bool = False
@@ -116,6 +140,61 @@ class FaroDomain:
     alert: Alert | None = None
     alert_history: list[Alert] = field(default_factory=list)
     completed_holes: set[str] = field(default_factory=set)
+
+    def begin_session(self, session_id: str, operator_label: str, mode: Mode = Mode.MANUAL) -> bool:
+        """Start or replace a fictitious session only while no action is pending."""
+        if not isinstance(session_id, str) or not session_id.strip() or not isinstance(operator_label, str) or not operator_label.strip():
+            return False
+        if not isinstance(mode, Mode) or self.pending is not None:
+            return False
+        self.session = Session(session_id.strip(), operator_label.strip(), mode, False, 0)
+        return True
+
+    def set_listening(self, session_id: str, enabled: bool) -> bool:
+        """Listening is explicit; a mode change never starts the microphone."""
+        if self.session is None or self.session.session_id != session_id or type(enabled) is not bool:
+            return False
+        if self.session.mode is not Mode.VOZ and enabled:
+            return False
+        self.session.listening = enabled
+        self.session.generation += 1
+        return True
+
+    def set_mode(self, session_id: str, mode: Mode) -> bool:
+        """Switch channels only when no simulated action is in flight."""
+        if self.session is None or self.session.session_id != session_id or not isinstance(mode, Mode):
+            return False
+        if self.pending is not None:
+            return False
+        previous = self.session.mode
+        if previous is mode:
+            return True
+        self.session.listening = False
+        self.session.generation += 1
+        self.session.transfers.append((previous, mode, self.session.generation))
+        self.session.mode = mode
+        return True
+
+    def handle_input(self, command: Command, *, source: Source, session_id: str,
+                     generation: int | None = None) -> Decision:
+        """Mandatory input boundary enforcing session, mode and capture generation."""
+        before = self.state
+        command_id = uuid4().hex
+        if self.session is None or self.session.session_id != session_id:
+            return Decision(False, "invalid_session", command_id, before, self.state, self.selected_hole_id)
+        if not isinstance(source, Source):
+            return Decision(False, "invalid_source", command_id, before, self.state, self.selected_hole_id)
+        if source is Source.VOICE:
+            if self.session.mode is not Mode.VOZ:
+                return Decision(False, "voice_disabled_in_manual", command_id, before, self.state, self.selected_hole_id)
+            if not self.session.listening:
+                return Decision(False, "listening_disabled", command_id, before, self.state, self.selected_hole_id)
+            if generation is None or generation != self.session.generation:
+                return Decision(False, "stale_listening_generation", command_id, before, self.state, self.selected_hole_id)
+        elif source is Source.TEXT and self.session.mode is Mode.VOZ:
+            # Text is the explicit manual test channel; it cannot enable capture.
+            pass
+        return self.handle(command)
 
     @property
     def selected_hole(self) -> Hole | None:

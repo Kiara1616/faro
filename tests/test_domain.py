@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from faro.domain import Command, EventStatus, FaroDomain, Intent, State
+from faro.domain import Command, EventStatus, FaroDomain, Intent, Mode, Source, State
 from faro.plan import load_demo_plan
 
 
@@ -193,6 +193,52 @@ def test_blocked_hole_and_skipping_next_hole_are_rejected():
     before = ordered.snapshot()
     assert not send(ordered, Intent.SELECCIONAR_TALADRO, hole_id="103").accepted
     assert ordered.snapshot() == before
+
+
+def test_session_requires_explicit_start_and_rejects_voice_in_manual():
+    domain = engine()
+    command = Command(Intent.CONSULTAR_ESTADO)
+    denied = domain.handle_input(command, source=Source.VOICE, session_id="missing")
+    assert not denied.accepted and denied.reason == "invalid_session"
+    assert domain.begin_session("demo-1", "operador de prueba", Mode.MANUAL)
+    denied = domain.handle_input(command, source=Source.VOICE, session_id="demo-1")
+    assert not denied.accepted and denied.reason == "voice_disabled_in_manual"
+    assert domain.state is State.SIN_SELECCION
+
+
+def test_voice_mode_requires_explicit_listening_and_current_generation():
+    domain = engine()
+    assert domain.begin_session("demo-1", "operador de prueba", Mode.VOZ)
+    denied = domain.handle_input(Command(Intent.CONSULTAR_ESTADO), source=Source.VOICE, session_id="demo-1", generation=0)
+    assert not denied.accepted and denied.reason == "listening_disabled"
+    assert domain.set_listening("demo-1", True)
+    generation = domain.session.generation
+    stale = domain.handle_input(Command(Intent.CONSULTAR_ESTADO), source=Source.VOICE, session_id="demo-1", generation=generation - 1)
+    assert not stale.accepted and stale.reason == "stale_listening_generation"
+    accepted = domain.handle_input(Command(Intent.CONSULTAR_ESTADO), source=Source.VOICE, session_id="demo-1", generation=generation)
+    assert accepted.accepted
+    assert domain.set_mode("demo-1", Mode.MANUAL)
+    assert domain.session.listening is False
+    assert not domain.set_listening("demo-1", True)
+
+
+def test_mode_transfer_is_blocked_during_action_and_audited_afterwards():
+    domain = engine()
+    assert domain.begin_session("demo-1", "operador de prueba", Mode.MANUAL)
+    # Build the domain cycle through the same explicit text channel used by UI tests.
+    for command in (Command(Intent.SELECCIONAR_TALADRO, hole_id="101"),
+                    Command(Intent.CONSULTAR_TALADRO, hole_id="101"),
+                    Command(Intent.PREPARAR_CARGA),
+                    Command(Intent.DECLARAR_PLAN, product="producto alfa", kg=100),):
+        assert domain.handle_input(command, source=Source.TEXT, session_id="demo-1").accepted
+    action = domain.handle_input(Command(Intent.EXTENDER_BRAZO, zone_clear=True), source=Source.TEXT, session_id="demo-1")
+    assert action.accepted
+    assert not domain.set_mode("demo-1", Mode.VOZ)
+    assert domain.session.mode is Mode.MANUAL
+    domain.apply_event(action.command_id, EventStatus.COMPLETED)
+    assert domain.set_mode("demo-1", Mode.VOZ)
+    assert domain.session.listening is False
+    assert domain.session.transfers[-1][:2] == (Mode.MANUAL, Mode.VOZ)
 
 
 def test_id_and_blocked_hole_alerts_are_transient_and_correctable():
