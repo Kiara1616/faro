@@ -13,9 +13,11 @@ import sys
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
-from faro.core import FaroEngine
+from faro.domain import FaroDomain, Mode, Source
+from faro.plan import load_demo_plan
 from faro.ui import FaroWindow
 from faro.voice import VoiceRecognizer
+from faro.voice_pipeline import VoicePipeline
 
 
 ROOT = Path(__file__).resolve().parent
@@ -30,9 +32,11 @@ class VoiceEvents(QObject):
 
 def main() -> int:
     app = QApplication(sys.argv)
-    data_dir = ROOT / "data"
-    data_dir.mkdir(exist_ok=True)
-    engine = FaroEngine(db_path=data_dir / "decisions.sqlite3")
+    plan = load_demo_plan(ROOT / "fixtures" / "malla_demo.json")
+    domain = FaroDomain(plan)
+    session_id = "demo-session"
+    domain.begin_session(session_id, "Operador de prueba", Mode.MANUAL)
+    pipeline = VoicePipeline(plan, domain)
     window = FaroWindow()
     events = VoiceEvents()
 
@@ -45,38 +49,67 @@ def main() -> int:
         "transcript": "",
         "decision": "Esperando una solicitud",
         "voice_status": "Micrófono inactivo",
+        "history": [],
     }
-    if engine.history:
-        last_event = engine.history[-1]
-        ui_state["transcript"] = last_event["transcript"]
-        ui_state["decision"] = last_event["decision"]
+
+    def snapshot() -> dict:
+        hole = domain.selected_hole
+        return {"operation": {"hole_id": hole.id if hole else None,
+                               "product": hole.product if hole else None,
+                               "planned_kg": hole.planned_kg if hole else None,
+                               "delivery_method": hole.delivery_method if hole else None,
+                               "state": domain.state.value},
+                "session": domain.session_snapshot(),
+                "workflow": {"active": domain.state.value not in {"sin_seleccion", "cerrado"},
+                             "status": domain.state.value, "label": domain.state.value,
+                             "total": len(plan.holes), "step": len(domain.completed_holes) + 1},
+                "history": ui_state["history"]}
 
     def render() -> None:
-        window.render_state({**engine.snapshot(), **ui_state})
+        window.render_state({**snapshot(), **ui_state})
 
     def handle_command(text: str, source: str = "text") -> None:
-        decision = engine.handle(text, source=source)
-        ui_state["transcript"] = decision.transcript
-        ui_state["decision"] = decision.message
+        input_source = Source.VOICE if source == "voice" else Source.TEXT
+        generation = domain.session.generation if input_source is Source.VOICE else None
+        result = pipeline.process(text, source=input_source, session_id=session_id,
+                                  generation=generation, zone_clear=False)
+        ui_state["transcript"] = text
+        if result.decision is None:
+            accepted, intent, reason = False, result.parsed.intent or "desconocido", result.parsed.reason
+        else:
+            accepted, intent, reason = result.decision.accepted, result.parsed.intent or "desconocido", result.decision.reason
+        ui_state["decision"] = reason
+        ui_state["history"].append({"transcript": text, "intent": intent,
+                                    "accepted": accepted, "decision": reason,
+                                    "state": domain.state.value})
         render()
 
     def handle_voice_status(status: str, detail: str) -> None:
         if status == "listening":
             ui_state["listening"] = True
+            domain.set_listening(session_id, True)
         elif status in {"stopped", "error"}:
             ui_state["listening"] = False
-        if status != "stopped" or not str(ui_state["voice_status"]).startswith("No se pudo"):
-            ui_state["voice_status"] = detail or status
+            domain.set_listening(session_id, False)
+            if status == "error" and domain.pending is None:
+                domain.set_mode(session_id, Mode.MANUAL)
+        ui_state["voice_status"] = detail or status
         render()
 
     def toggle_voice(activate: bool) -> None:
         if activate:
-            if voice.start():
+            if not domain.set_mode(session_id, Mode.VOZ) or not domain.set_listening(session_id, True):
+                ui_state["voice_status"] = "No se puede activar voz durante una acción o sesión inválida."
+            elif voice.start():
                 ui_state["voice_status"] = "Iniciando micrófono…"
             else:
+                domain.set_listening(session_id, False)
+                domain.set_mode(session_id, Mode.MANUAL)
                 ui_state["voice_status"] = "El micrófono ya está iniciándose."
         else:
             voice.stop(timeout=0.5)
+            domain.set_listening(session_id, False)
+            domain.set_mode(session_id, Mode.MANUAL)
             ui_state["listening"] = False
             ui_state["voice_status"] = "Micrófono desactivado."
         render()
