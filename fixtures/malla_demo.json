@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "simulation_only": true,
+  "name": "Malla ficticia Faro v1",
+  "holes": [
+    {"id": "101", "product": "producto alfa", "planned_kg": 100, "delivery_method": "brazo", "blocked": false, "scenario": "normal"},
+    {"id": "102", "product": "producto beta", "planned_kg": 120, "delivery_method": "manguera", "blocked": false, "scenario": "probar dictado divergente"},
+    {"id": "103", "product": "producto alfa", "planned_kg": 80, "delivery_method": "brazo", "blocked": true, "scenario": "taladro bloqueado"}
+  ]
+}
