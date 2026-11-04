@@ -74,3 +74,14 @@ Los IDs, «producto alfa» y «100 kilos» de ejemplo son ficticios. F-03 fijar�
 - [x] Los mensajes distinguen reconocimiento, aceptación y fin del simulador.
 - [x] Negación, composición, valor/ID/estado dudoso y modo incompatible se rechazan sin acción.
 - [ ] Producto, voz, lógica e interfaz validan juntos la tabla antes de fijar código y frases. **Pendiente de revisión del equipo.**
+
+## Implementación preparatoria de F-22
+
+`faro/confirmation.py` contiene una compuerta determinista independiente para
+el prototipo: liga token, sesión, modo, taladro, acción, producto, kg y hora de
+vencimiento (10 s por defecto). Sus pruebas cubren cambio de contexto,
+expiración, cancelación y confirmación de un solo uso. La compuerta todavía no
+se activa automáticamente en todas las acciones de `FaroDomain`; esa política
+debe confirmarse con producto/ORICA antes de cambiar el flujo normal. Por ello
+no se debe afirmar que F-22 está cerrado hasta integrar la compuerta con la UI,
+el parser y el controlador.
