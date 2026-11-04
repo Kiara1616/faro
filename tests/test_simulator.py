@@ -66,6 +66,9 @@ def test_injected_failure_and_cancellation():
     other, second_simulator = ready()
     active = other.handle(Command(Intent.EXTENDER_BRAZO, zone_clear=True)).request
     assert second_simulator.submit(active).status is SimStatus.ACCEPTED
+    wrong_hole_cancel = ActionRequest("wrong-hole-cancel", "102", "cancel", target_command_id=active.command_id)
+    assert second_simulator.submit(wrong_hole_cancel).status is SimStatus.REJECTED
+    assert second_simulator.busy
     pause = other.handle(Command(Intent.PAUSAR)).request
     assert second_simulator.submit(pause).status is SimStatus.ACCEPTED
     cancelled = second_simulator.tick()
@@ -83,3 +86,30 @@ def test_simulator_rejects_invalid_load_plan():
     assert simulator.submit(malformed).status is SimStatus.REJECTED
     blocked = ActionRequest("blocked", "103", "extender_brazo")
     assert simulator.submit(blocked).status is SimStatus.REJECTED
+
+
+def test_rejected_submission_reconciles_domain_without_false_completion():
+    domain, simulator = ready()
+    occupying = ActionRequest("other-active", "102", "extender_manguera")
+    assert simulator.submit(occupying).status is SimStatus.ACCEPTED
+    decision = domain.handle(Command(Intent.EXTENDER_BRAZO, zone_clear=True))
+    assert decision.state_after is State.MOVIMIENTO_EN_CURSO
+    rejected = simulator.submit(decision.request)
+    assert rejected.status is SimStatus.REJECTED
+    assert domain.reject_submission(rejected.command_id, rejected.reason)
+    assert domain.state is State.FALLO
+    assert domain.pending is None
+    assert not domain.apply_event(rejected.command_id, EventStatus.COMPLETED)
+
+
+def test_rejected_cancellation_keeps_result_unknown():
+    domain, simulator = ready()
+    action = domain.handle(Command(Intent.EXTENDER_BRAZO, zone_clear=True)).request
+    # Simulate a lost initial request: the adapter cannot find it to cancel.
+    pause = domain.handle(Command(Intent.PAUSAR)).request
+    rejected = simulator.submit(pause)
+    assert rejected.status is SimStatus.REJECTED
+    assert domain.reject_cancellation(action.command_id, rejected.reason)
+    assert domain.state is State.RESULTADO_DESCONOCIDO
+    assert domain.pending is None
+    assert not domain.apply_event(action.command_id, EventStatus.COMPLETED)

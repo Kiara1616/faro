@@ -92,17 +92,19 @@ class FaroDomain:
     pending: ActionRequest | None = None
     cancel_requested: bool = False
     expected_next_hole_id: str | None = None
+    last_failure_reason: str | None = None
     completed_holes: set[str] = field(default_factory=set)
 
     @property
     def selected_hole(self) -> Hole | None:
         return next((h for h in self.plan.holes if h.id == self.selected_hole_id), None)
 
-    def snapshot(self) -> tuple[State, str | None, bool, str | None, bool, str | None, frozenset[str]]:
+    def snapshot(self) -> tuple[State, str | None, bool, str | None, bool, str | None, str | None, frozenset[str]]:
         """Operational state for invariant checks; decision IDs do not alter it."""
         return (self.state, self.selected_hole_id, self.plan_validated,
                 self.pending.command_id if self.pending else None,
                 self.cancel_requested, self.expected_next_hole_id,
+                self.last_failure_reason,
                 frozenset(self.completed_holes))
 
     def handle(self, command: Command) -> Decision:
@@ -150,6 +152,7 @@ class FaroDomain:
                 return reject("next_hole_required")
             self.selected_hole_id = hole.id
             self.expected_next_hole_id = None
+            self.last_failure_reason = None
             self.plan_validated = False
             self.state = State.SELECCIONADO
             return accept("hole_selected")
@@ -244,6 +247,7 @@ class FaroDomain:
         if status is EventStatus.COMPLETED and cancellation_was_requested:
             # A completion racing with cancellation needs explicit reconciliation.
             self.state = State.RESULTADO_DESCONOCIDO
+            self.last_failure_reason = "completion_after_cancel_request"
         elif status is EventStatus.COMPLETED:
             if action in {Intent.EXTENDER_BRAZO.value, Intent.EXTENDER_MANGUERA.value}:
                 self.state = State.POSICIONADO
@@ -253,4 +257,38 @@ class FaroDomain:
                 self.state = State.RETRAIDO
         else:
             self.state = State.FALLO
+            self.last_failure_reason = "simulator_failed" if status is EventStatus.FAILED else "simulator_cancelled"
+        return True
+
+    def reject_submission(self, command_id: str, reason: str) -> bool:
+        """Reconcile a simulator refusal of the currently authorized request.
+
+        The request was never executed. A refusal for another command cannot
+        change the active cycle. UI and audit may use ``last_failure_reason``.
+        """
+        if self.pending is None or self.pending.command_id != command_id:
+            return False
+        if not isinstance(reason, str) or not reason.strip():
+            return False
+        self.pending = None
+        self.cancel_requested = False
+        self.last_failure_reason = reason
+        self.state = State.FALLO
+        return True
+
+    def reject_cancellation(self, target_command_id: str, reason: str) -> bool:
+        """Conservatively reconcile a refused cancellation request.
+
+        The original action may still execute. No later completion can be
+        applied until a separate recovery procedure resolves its outcome.
+        """
+        if (self.pending is None or self.pending.command_id != target_command_id
+                or not self.cancel_requested):
+            return False
+        if not isinstance(reason, str) or not reason.strip():
+            return False
+        self.pending = None
+        self.cancel_requested = False
+        self.last_failure_reason = reason
+        self.state = State.RESULTADO_DESCONOCIDO
         return True

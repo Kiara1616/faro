@@ -146,6 +146,37 @@ def test_completion_racing_with_pause_requires_reconciliation():
     assert not send(domain, Intent.INICIAR_CARGA).accepted
 
 
+def test_simulator_submission_refusal_reconciles_only_matching_pending():
+    domain = engine()
+    prepared(domain)
+    request = send(domain, Intent.EXTENDER_BRAZO, zone_clear=True).request
+    before = domain.snapshot()
+    assert not domain.reject_submission("another-command", "simulator_busy")
+    assert not domain.reject_submission(request.command_id, "")
+    assert domain.snapshot() == before
+    assert domain.reject_submission(request.command_id, "simulator_busy")
+    assert domain.state is State.FALLO
+    assert domain.last_failure_reason == "simulator_busy"
+    assert domain.pending is None
+    assert not domain.apply_event(request.command_id, EventStatus.COMPLETED)
+
+
+def test_cancel_refusal_requires_reconciliation_and_ignores_late_completion():
+    domain = engine()
+    prepared(domain)
+    request = send(domain, Intent.EXTENDER_BRAZO, zone_clear=True).request
+    assert send(domain, Intent.PAUSAR).accepted
+    before = domain.snapshot()
+    assert not domain.reject_cancellation("other-command", "no_matching_action")
+    assert not domain.reject_cancellation(request.command_id, "")
+    assert domain.snapshot() == before
+    assert domain.reject_cancellation(request.command_id, "no_matching_action")
+    assert domain.state is State.RESULTADO_DESCONOCIDO
+    assert domain.last_failure_reason == "no_matching_action"
+    assert domain.pending is None
+    assert not domain.apply_event(request.command_id, EventStatus.COMPLETED)
+
+
 def test_blocked_hole_and_skipping_next_hole_are_rejected():
     domain = engine()
     before = domain.snapshot()

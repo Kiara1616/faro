@@ -61,6 +61,7 @@ class SimulatedMMU:
         if request.action == "cancel":
             if (self._pending is None or request.target_command_id is None
                     or self._pending.request.command_id != request.target_command_id
+                    or self._pending.request.hole_id != request.hole_id
                     or self._pending.cancellation_requested):
                 return SimEvent(request.command_id, SimStatus.REJECTED, "no_matching_action")
             self._pending.cancellation_requested = True
