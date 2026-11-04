@@ -12,7 +12,7 @@ El parser puede quitar el prefijo inicial «Oye Faro» o «Faro» únicamente si
 
 `hole_id` es un ID del fixture local, pronunciado o escrito completo. `product` coincide con uno de los nombres de la malla ficticia. `kg` es entero positivo con unidad explícita «kilos»/«kilogramos»; no se aceptan decimales en v1. Esta restricción es de parser de prototipo, pendiente de vocabulario real. Para comparar se exige igualdad exacta con el fixture; no se inventa tolerancia de campo.
 
-Estados de tarea: `SIN_SELECCION`, `SELECCIONADO`, `CONSULTADO`, `PREPARADO`, `CONFIRMACION_PENDIENTE`, `MOVIMIENTO_EN_CURSO`, `POSICIONADO`, `CARGA_EN_CURSO`, `CARGADO`, `RETRACCION_EN_CURSO`, `RETRAIDO`, `CERRADO`, `RESULTADO_DESCONOCIDO`. Una discrepancia o bloqueo rechazado se registra como **alerta pendiente separada** y no cambia el estado operativo. Los eventos de F-05 determinarán cuándo termina una acción. El modo de sesión es independiente: `VOZ`, `MANUAL`, `DESHABILITADO`.
+Estados de tarea: `SIN_SELECCION`, `SELECCIONADO`, `CONSULTADO`, `PREPARADO`, `CONFIRMACION_PENDIENTE`, `MOVIMIENTO_EN_CURSO`, `POSICIONADO`, `CARGA_EN_CURSO`, `CARGADO`, `RETRACCION_EN_CURSO`, `RETRAIDO`, `CERRADO`, `FALLO`, `RESULTADO_DESCONOCIDO`. Una discrepancia o bloqueo rechazado se registra como **alerta pendiente separada** y no cambia el estado operativo. Los eventos de F-05 determinarán cuándo termina una acción. El modo de sesión es independiente: `VOZ`, `MANUAL`, `DESHABILITADO`.
 
 ## Matriz de intenciones
 
@@ -47,6 +47,7 @@ Los IDs, «producto alfa» y «100 kilos» de ejemplo son ficticios. F-03 fijar�
 4. La confirmación vence tras un plazo configurable, propuesto inicialmente de 10 segundos para pruebas. Al vencer, se elimina la solicitud pendiente; confirmar tarde no reenvía.
 5. Un timeout del adaptador lleva a `RESULTADO_DESCONOCIDO`. Bloquea órdenes dependientes hasta revisión manual simulada; no se interpreta como éxito ni se reintenta automáticamente.
 6. «Pausar» es una petición al simulador y no equivale a una parada de emergencia física. La interfaz debe mostrar si la petición fue recibida y si la cancelación terminó.
+   Si una finalización compite con una pausa solicitada, v1 conserva `RESULTADO_DESCONOCIDO` para impedir avanzar hasta conciliación simulada; no afirma que la acción se detuvo físicamente.
 7. La UI rotula siempre «SIMULACIÓN». Mensajes de ejemplo: «Taladro 101: plan consultado», «Taladro 101: brazo en curso», «Taladro 101: carga simulada completada», «Taladro 101: kg no coincide; revisión requerida».
 
 ## Casos mínimos para revisión
