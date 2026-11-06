@@ -332,7 +332,12 @@ class FaroWindow(QWidget):
         command_status = snapshot.get("command_status")
         if command_status is not None:
             self.execution_status.setText(f"Estado de ejecución: {command_status}")
-            self.recovery_button.setEnabled("requiere revisión" in str(command_status).lower())
+            normalized_status = str(command_status).lower()
+            self.recovery_button.setEnabled(
+                "requiere revisión" in normalized_status
+                or "timeout" in normalized_status
+                or "resultado desconocido" in normalized_status
+            )
         alert = snapshot.get("alert")
         if isinstance(alert, Mapping):
             reason = alert.get("reason", "revisión requerida")
