@@ -88,3 +88,17 @@ def test_restart_after_timeout_does_not_replay_or_infer_success(tmp_path):
     assert restarted.simulator.busy is False
     assert restarted.domain.state is State.SIN_SELECCION
     assert restarted.tick() is None
+
+
+def test_unknown_result_requires_explicit_manual_recovery(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "audit.sqlite3")
+    controller.simulator.timeout_ticks = 1
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    controller.tick()
+    assert controller.tick().status.value == "timeout"
+    assert controller.recover_unknown("operator_review")
+    assert controller.domain.state is State.FALLO
+    assert controller.recover_unknown() is False

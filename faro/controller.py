@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from faro.audit import AuditStore
-from faro.domain import EventStatus, FaroDomain, Mode, Source
+from faro.domain import EventStatus, FaroDomain, Mode, Source, State
 from faro.plan import DemoPlan
 from faro.simulator import SimEvent, SimStatus, SimulatedMMU
 from faro.voice_pipeline import PipelineResult, VoicePipeline
@@ -74,3 +74,12 @@ class FaroController:
             self.domain.apply_event(event.command_id, status_map[event.status])
             self.audit.record_event(event.command_id, event.status.value, event.reason)
         return event
+
+    def recover_unknown(self, reason: str = "manual_review") -> bool:
+        """Explicitly acknowledge an unknown simulator result; never auto-retry."""
+        if self.domain.state is not State.RESULTADO_DESCONOCIDO:
+            return False
+        self.domain.last_failure_reason = reason
+        self.domain.state = State.FALLO
+        self.audit.record_event("manual-recovery", "recovered", reason)
+        return True

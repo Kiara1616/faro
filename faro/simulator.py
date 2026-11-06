@@ -89,7 +89,7 @@ class SimulatedMMU:
         return SimEvent(request.command_id, SimStatus.ACCEPTED)
 
     def tick(self) -> SimEvent | None:
-        """Advance one deterministic simulator step; no wall-clock or hardware use."""
+        """Advance one deterministic injected-clock tick; no wall-clock or hardware use."""
         pending = self._pending
         if pending is None:
             return None
