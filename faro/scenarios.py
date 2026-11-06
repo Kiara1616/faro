@@ -21,6 +21,9 @@ class Scenario:
 
 def load_scenarios(path: str | Path) -> dict[str, Scenario]:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    if (not isinstance(raw, dict) or set(raw) != {"schema_version", "simulation_only", "scenarios"}
+            or raw["schema_version"] != 1 or raw["simulation_only"] is not True):
+        raise ValueError("Invalid fictional scenario structure")
     scenarios: dict[str, Scenario] = {}
     for item in raw.get("scenarios", []):
         scenario = Scenario(
