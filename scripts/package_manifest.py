@@ -8,7 +8,11 @@ import json
 from pathlib import Path
 
 
-REQUIRED = ("README.md", "app.py", "fixtures/malla_demo.json", "requirements.txt")
+REQUIRED = (
+    "README.md", "ENTREGA_FARO.md", "app.py", "fixtures/malla_demo.json",
+    "requirements.txt", "requirements-voice.txt", "scripts/setup_voice_model.py",
+    "scripts/diagnose_offline.py", "scripts/package_manifest.py",
+)
 
 
 def digest(path: Path) -> str:
@@ -34,8 +38,9 @@ def build_manifest(root: str | Path) -> dict[str, object]:
 def verify_manifest(root: str | Path, manifest: str | Path) -> list[str]:
     expected = json.loads(Path(manifest).read_text(encoding="utf-8"))
     actual = build_manifest(root)["files"]
-    return [name for name, checksum in expected.get("files", {}).items()
-            if actual.get(name) != checksum]
+    expected_files = expected.get("files", {})
+    mismatches = [name for name in REQUIRED if expected_files.get(name) != actual.get(name)]
+    return mismatches
 
 
 def main() -> int:
