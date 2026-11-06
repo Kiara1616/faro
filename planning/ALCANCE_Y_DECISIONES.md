@@ -62,7 +62,7 @@ El diagrama resume el producto; F-02 fijará el orden exacto de cada comando y F
 | D-01 | Priorizar flujo de carguío por taladro y movimientos simples. | Interpretación del briefing | 01:47–02:13, 03:00–04:10, 09:15–10:00 | Producto | Ajustar prioridad y vocabulario; preservar contrato del adaptador. |
 | D-02 | Usar malla, cantidades, productos y sensores totalmente ficticios. | Decisión del equipo | Falta de datos operativos autorizados | Producto/lógica | Sustituir fixtures solo tras recibir datos de prueba autorizados. |
 | D-03 | Ejecutar ASR local con escucha explícita; «Oye Faro» es prefijo durante escucha. | Decisión del equipo | Cabina descrita 07:05–07:55; no se exigió wake word | Voz | Evaluar otro mecanismo con métricas de activación y seguridad. |
-| D-04 | Exigir reglas y confirmación de prototipo para ciertas acciones; bloquear discrepancias. | Decisión del equipo | ORICA habló de alerta por desvíos 14:34–15:40 | Lógica/producto | Rehacer matriz F-02 según reglas escritas de ORICA; no trasladar reglas actuales a campo. |
+| D-04 | Proponer reglas y confirmación de prototipo para ciertas acciones, condicionadas a la integración de F-22; bloquear discrepancias. | Decisión del equipo | ORICA habló de alerta por desvíos 14:34–15:40 | Lógica/producto | Rehacer matriz F-02 según reglas escritas de ORICA; no trasladar reglas actuales a campo. |
 | D-05 | Modos voz/manual simulados excluyentes. | Respuesta de ORICA + diseño | 25:40–26:12, 28:25–29:05 | Integración | Adecuar transferencia cuando se conozca interfaz y prioridad física. |
 | D-06 | Sesión ficticia sin reconocimiento biométrico. | Decisión del equipo | Emisor responsable 26:15–26:43, método no especificado | Producto | Adoptar método aprobado y revalidar amenazas en fase posterior. |
 | D-07 | No implementar conexión a MMU/PLC/LOADPlus/ProBlast. | Límite técnico | Interfaz no confirmada 11:10–11:43, 15:51–17:00 | Integración | Diseñar primero lectura en entorno de prueba autorizado; cualquier escritura exige revisión industrial. |
@@ -72,7 +72,7 @@ El diagrama resume el producto; F-02 fijará el orden exacto de cada comando y F
 
 ## Preguntas pendientes para ORICA
 
-**Canal:** comité organizador, según briefing 20:22–20:49. **Estado al 3 de noviembre:** preparadas; este repositorio no acredita envío ni respuesta. Producto debe registrar fecha, remitente, respuesta textual autorizada y cambio de decisión antes de marcar una pregunta como respondida.
+**Canal:** comité organizador, según briefing 20:22–20:49. **Estado al 6 de noviembre:** preparadas; este repositorio no acredita envío ni respuesta. Producto debe registrar fecha, remitente, respuesta textual autorizada y cambio de decisión antes de marcar una pregunta como respondida.
 
 | ID | Pregunta concreta | Para qué se necesita | Dueño | Decisiones/issues afectados | Si no hay respuesta antes de v1 |
 | --- | --- | --- | --- | --- | --- |
