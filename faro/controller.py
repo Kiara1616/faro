@@ -9,6 +9,7 @@ from faro.audit import AuditStore
 from faro.domain import EventStatus, FaroDomain, Mode, Source, State
 from faro.plan import DemoPlan
 from faro.simulator import SimEvent, SimStatus, SimulatedMMU
+from faro.scenarios import Scenario, build_simulator
 from faro.voice_pipeline import PipelineResult, VoicePipeline
 
 
@@ -19,12 +20,16 @@ class FaroController:
     domain: FaroDomain
     simulator: SimulatedMMU
     session_id: str = "demo-session"
+    scenario_name: str = "normal"
 
     @classmethod
-    def create(cls, plan: DemoPlan, audit_path: str | Path) -> "FaroController":
+    def create(cls, plan: DemoPlan, audit_path: str | Path,
+               *, scenario: Scenario | None = None) -> "FaroController":
         domain = FaroDomain(plan)
         domain.begin_session("demo-session", "Operador de prueba", Mode.MANUAL)
-        return cls(plan, AuditStore(audit_path), domain, SimulatedMMU(plan))
+        selected = scenario or Scenario("normal", "flujo normal")
+        return cls(plan, AuditStore(audit_path), domain, build_simulator(plan, selected),
+                   scenario_name=selected.name)
 
     def __post_init__(self) -> None:
         self.pipeline = VoicePipeline(self.plan, self.domain)
@@ -51,7 +56,8 @@ class FaroController:
                     self.domain.reject_cancellation(decision.request.target_command_id or "", event.reason)
                 else:
                     self.domain.reject_submission(decision.command_id, event.reason)
-                self.audit.record_event(decision.command_id, event.status.value, event.reason)
+                self.audit.record_event(decision.command_id, event.status.value,
+                                        f"scenario={self.scenario_name}; {event.reason}".strip("; "))
             else:
                 self.audit.record_event(decision.command_id, event.status.value, event.reason)
         return result
@@ -69,7 +75,8 @@ class FaroController:
         if event.status is SimStatus.TIMEOUT:
             self._last_unknown_command_id = event.command_id
             self.domain.mark_unknown(event.command_id, event.reason or "simulator_timeout")
-            self.audit.record_event(event.command_id, event.status.value, event.reason)
+            self.audit.record_event(event.command_id, event.status.value,
+                                    f"scenario={self.scenario_name}; {event.reason}".strip("; "))
             return event
         if event.status in status_map:
             self.domain.apply_event(event.command_id, status_map[event.status])
@@ -84,5 +91,6 @@ class FaroController:
         self.domain.state = State.FALLO
         command_id = getattr(self, "_last_unknown_command_id", None)
         if command_id:
-            self.audit.record_event(command_id, "recovered", reason)
+            self.audit.record_event(command_id, "recovered",
+                                    f"scenario={self.scenario_name}; {reason}")
         return True

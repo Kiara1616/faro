@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QApplication
 from faro.controller import FaroController
 from faro.domain import Mode, Source
 from faro.plan import load_demo_plan
+from faro.scenarios import load_scenarios
 from faro.ui import FaroWindow
 from faro.voice import VoiceRecognizer
 
@@ -33,7 +34,10 @@ class VoiceEvents(QObject):
 def main() -> int:
     app = QApplication(sys.argv)
     plan = load_demo_plan(ROOT / "fixtures" / "malla_demo.json")
-    controller = FaroController.create(plan, ROOT / "faro-audit.sqlite3")
+    scenarios = load_scenarios(ROOT / "fixtures" / "escenarios_demo.json")
+    scenario_name = os.environ.get("FARO_SCENARIO", "normal")
+    selected_scenario = scenarios.get(scenario_name, scenarios["normal"])
+    controller = FaroController.create(plan, ROOT / "faro-audit.sqlite3", scenario=selected_scenario)
     domain = controller.domain
     session_id = "demo-session"
     window = FaroWindow()
@@ -58,11 +62,13 @@ def main() -> int:
                                "product": hole.product if hole else None,
                                "planned_kg": hole.planned_kg if hole else None,
                                "delivery_method": hole.delivery_method if hole else None,
+                               "scenario": controller.scenario_name,
                                "state": domain.state.value},
                 "session": domain.session_snapshot(),
                 "workflow": {"active": domain.state.value not in {"sin_seleccion", "cerrado"},
                              "status": domain.state.value, "label": domain.state.value,
-                             "total": len(plan.holes), "step": len(domain.completed_holes) + 1},
+                             "total": len(plan.holes), "step": len(domain.completed_holes) + 1,
+                             "scenario": controller.scenario_name},
                 "history": ui_state["history"],
                 "alert": vars(domain.alert) if domain.alert else None}
 

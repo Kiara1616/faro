@@ -205,7 +205,8 @@ class FaroWindow(QWidget):
         self.operation_labels = {}
         operation_row = QHBoxLayout()
         for key, title in (("hole_id", "TALADRO"), ("product", "PRODUCTO"),
-                           ("planned_kg", "KG PREVISTOS"), ("delivery_method", "MÉTODO")):
+                           ("planned_kg", "KG PREVISTOS"), ("delivery_method", "MÉTODO"),
+                           ("scenario", "ESCENARIO")):
             metric = QFrame()
             metric.setObjectName("metric")
             metric_layout = QVBoxLayout(metric)

@@ -17,5 +17,11 @@ estado/eventos y después crear otro con `normal`. No se reutilizan objetos entr
 escenarios: así se evita contaminación de fallos anteriores. Los nombres deben
 permanecer visibles como **SIMULACIÓN** en cualquier selector de UI futuro.
 
+La consola permite seleccionar el escenario ficticio mediante la variable local
+`FARO_SCENARIO` antes de iniciar (`normal` por defecto). La tarjeta de operación
+muestra el nombre del escenario junto al taladro y el registro incorpora el
+escenario en el motivo del evento. Un nombre desconocido vuelve a `normal`; no
+se acepta una configuración no validada.
+
 Verificación automatizada: `tests/test_scenarios.py`; suite actual: 150 pruebas.
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from faro.controller import FaroController
 from faro.domain import Mode, Source, State
 from faro.plan import load_demo_plan
+from faro.scenarios import load_scenarios
 
 
 PLAN = load_demo_plan(Path(__file__).resolve().parents[1] / "fixtures" / "malla_demo.json")
@@ -103,3 +104,13 @@ def test_unknown_result_requires_explicit_manual_recovery(tmp_path):
     assert controller.domain.state is State.FALLO
     assert controller.recover_unknown() is False
     assert any(row["event_status"] == "recovered" for row in controller.audit.list_records())
+
+
+def test_controller_scenario_is_visible_and_isolated(tmp_path):
+    scenarios = load_scenarios(Path(__file__).resolve().parents[1] / "fixtures" / "escenarios_demo.json")
+    failed = FaroController.create(PLAN, tmp_path / "failed.sqlite3", scenario=scenarios["fallo_brazo"])
+    normal = FaroController.create(PLAN, tmp_path / "normal.sqlite3", scenario=scenarios["normal"])
+    assert failed.scenario_name == "fallo_brazo"
+    assert normal.scenario_name == "normal"
+    assert failed.simulator.fail_actions != normal.simulator.fail_actions
+    assert normal.simulator.busy is False
