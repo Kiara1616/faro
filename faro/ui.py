@@ -53,6 +53,7 @@ class FaroWindow(QWidget):
 
     command_submitted = Signal(str)
     listening_toggled = Signal(bool)
+    recovery_requested = Signal()
 
     VIEW_INDEX = {"estado": 0, "indicadores": 1, "revision": 2}
 
@@ -158,6 +159,10 @@ class FaroWindow(QWidget):
         decision_layout.addWidget(self.decision_label)
         self.execution_status = _label("Estado de ejecución: en espera", "caption")
         decision_layout.addWidget(self.execution_status)
+        self.recovery_button = QPushButton("Registrar revisión manual")
+        self.recovery_button.setEnabled(False)
+        self.recovery_button.clicked.connect(self.recovery_requested.emit)
+        decision_layout.addWidget(self.recovery_button)
         sidebar.addWidget(decision_card)
 
         history_card, history_layout = _card()
@@ -326,6 +331,7 @@ class FaroWindow(QWidget):
         command_status = snapshot.get("command_status")
         if command_status is not None:
             self.execution_status.setText(f"Estado de ejecución: {command_status}")
+            self.recovery_button.setEnabled("requiere revisión" in str(command_status).lower())
         alert = snapshot.get("alert")
         if isinstance(alert, Mapping):
             reason = alert.get("reason", "revisión requerida")

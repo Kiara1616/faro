@@ -117,8 +117,15 @@ def main() -> int:
             ui_state["voice_status"] = "Micrófono desactivado."
         render()
 
+    def recover_unknown() -> None:
+        if controller.recover_unknown("revisión manual en consola"):
+            ui_state["command_status"] = "recuperado manualmente; requiere nueva orden"
+            ui_state["decision"] = "Resultado desconocido revisado; no se reintentó automáticamente."
+            render()
+
     window.command_submitted.connect(handle_command)
     window.listening_toggled.connect(toggle_voice)
+    window.recovery_requested.connect(recover_unknown)
     events.result.connect(lambda text: handle_command(text, source="voice"))
     events.status.connect(handle_voice_status)
     simulator_timer = QTimer(window)
