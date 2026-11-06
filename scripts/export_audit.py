@@ -9,8 +9,12 @@ from pathlib import Path
 from faro.audit import AuditStore
 
 
-def export_audit(database: str | Path, output: str | Path) -> int:
+def export_audit(database: str | Path, output: str | Path, *, redact: bool = False) -> int:
     records = AuditStore(database).list_records()
+    if redact:
+        for record in records:
+            record["operator_label"] = "<operator-redacted>"
+            record["transcript"] = "<transcript-redacted>"
     report = {
         "simulation_only": True,
         "audio_included": False,
@@ -25,8 +29,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Exporta auditoría ficticia sin audio.")
     parser.add_argument("database", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--redact", action="store_true")
     args = parser.parse_args()
-    count = export_audit(args.database, args.output)
+    count = export_audit(args.database, args.output, redact=args.redact)
     print(f"Exportados {count} registros ficticios; audio_included=false")
     return 0
 

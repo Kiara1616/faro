@@ -10,9 +10,14 @@
 - La limpieza de un ensayo consiste en retirar su SQLite y archivos de audio
   fuera del repositorio; el reporte exportado se conserva solo si está anonimizado.
 
-Ejemplo:
+Para generar una copia anonimizada y limpiar artefactos de ensayo:
 
 ```powershell
-python scripts/export_audit.py data/faro-audit.sqlite3 work/auditoria-ficticia.json
+python scripts/export_audit.py data/faro-audit.sqlite3 work/auditoria-ficticia.json --redact
+python scripts/clean_evidence.py work/evidencia
 ```
+
+El archivo de briefing se conserva solo para trabajo interno y no forma parte
+del paquete presentable; la carpeta de entrega se verifica mediante el
+manifiesto y no debe incluirlo, WAV, SQLite, logs ni secretos.
 
