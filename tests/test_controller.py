@@ -102,3 +102,4 @@ def test_unknown_result_requires_explicit_manual_recovery(tmp_path):
     assert controller.recover_unknown("operator_review")
     assert controller.domain.state is State.FALLO
     assert controller.recover_unknown() is False
+    assert any(row["event_status"] == "recovered" for row in controller.audit.list_records())
