@@ -72,3 +72,19 @@ def test_controller_timeout_is_audited_and_never_replayed(tmp_path):
     assert controller.domain.state is State.RESULTADO_DESCONOCIDO
     assert controller.tick() is None
     assert any(row["event_status"] == "timeout" for row in controller.audit.list_records())
+
+
+def test_restart_after_timeout_does_not_replay_or_infer_success(tmp_path):
+    audit_path = tmp_path / "audit.sqlite3"
+    controller = FaroController.create(PLAN, audit_path)
+    controller.simulator.timeout_ticks = 1
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    assert controller.tick().status.value == "in_progress"
+    assert controller.tick().status.value == "timeout"
+    restarted = FaroController.create(PLAN, audit_path)
+    assert restarted.simulator.busy is False
+    assert restarted.domain.state is State.SIN_SELECCION
+    assert restarted.tick() is None
