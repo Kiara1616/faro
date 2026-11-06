@@ -55,4 +55,10 @@ def load_demo_plan(path: str | Path) -> DemoPlan:
         if not isinstance(row["scenario"], str) or not row["scenario"].strip():
             raise ValueError("Scenario is required")
         holes.append(Hole(**row))
+    if not any(h.scenario == "normal" and not h.blocked for h in holes):
+        raise ValueError("Demo plan needs a normal fictional hole")
+    if not any("diverg" in h.scenario.casefold() for h in holes):
+        raise ValueError("Demo plan needs a discrepancy scenario")
+    if not any(h.blocked for h in holes):
+        raise ValueError("Demo plan needs a blocked hole")
     return DemoPlan(name=raw["name"].strip(), holes=tuple(holes))

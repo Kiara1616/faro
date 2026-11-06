@@ -38,3 +38,20 @@ def test_malformed_plan_is_rejected_before_use(tmp_path, change):
     path.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(ValueError):
         load_demo_plan(path)
+
+
+def test_plan_requires_normal_discrepancy_and_blocked_cases(tmp_path):
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["holes"][1]["scenario"] = "normal"
+    path = tmp_path / "missing-discrepancy.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="discrepancy"):
+        load_demo_plan(path)
+
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    for hole in data["holes"]:
+        hole["blocked"] = False
+    path = tmp_path / "missing-blocked.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="blocked"):
+        load_demo_plan(path)
