@@ -59,7 +59,8 @@ class FaroController:
                 self.audit.record_event(decision.command_id, event.status.value,
                                         f"scenario={self.scenario_name}; {event.reason}".strip("; "))
             else:
-                self.audit.record_event(decision.command_id, event.status.value, event.reason)
+                self.audit.record_event(decision.command_id, event.status.value,
+                                        f"scenario={self.scenario_name}; {event.reason}".strip("; "))
         return result
 
     def tick(self) -> SimEvent | None:
@@ -80,7 +81,8 @@ class FaroController:
             return event
         if event.status in status_map:
             self.domain.apply_event(event.command_id, status_map[event.status])
-            self.audit.record_event(event.command_id, event.status.value, event.reason)
+            self.audit.record_event(event.command_id, event.status.value,
+                                    f"scenario={self.scenario_name}; {event.reason}".strip("; "))
         return event
 
     def recover_unknown(self, reason: str = "manual_review") -> bool:
