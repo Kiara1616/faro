@@ -67,6 +67,7 @@ class FaroController:
             SimStatus.CANCELLED: EventStatus.CANCELLED,
         }
         if event.status is SimStatus.TIMEOUT:
+            self._last_unknown_command_id = event.command_id
             self.domain.mark_unknown(event.command_id, event.reason or "simulator_timeout")
             self.audit.record_event(event.command_id, event.status.value, event.reason)
             return event
@@ -81,5 +82,7 @@ class FaroController:
             return False
         self.domain.last_failure_reason = reason
         self.domain.state = State.FALLO
-        self.audit.record_event("manual-recovery", "recovered", reason)
+        command_id = getattr(self, "_last_unknown_command_id", None)
+        if command_id:
+            self.audit.record_event(command_id, "recovered", reason)
         return True
