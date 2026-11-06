@@ -18,7 +18,7 @@ Faro v1 representa ese trabajo mediante **una consola y una MMU simuladas** en u
 | Malla | Archivo local versionado con al menos tres taladros inventados. | El diseño previo por taladro fue descrito por ORICA (13:50–14:17); los datos son decisión del equipo. |
 | Taladro | ID único, producto, kg previstos, método y estado. Un taladro activo por vez. | Campos inspirados en el flujo descrito; estructura y valores propuestos por Faro. |
 | Acciones | Consultar/seleccionar, preparar, extender o retraer brazo/manguera, validar producto/kg, cargar, pausar, cerrar y avanzar, todo simulado. | Secuencia y acciones base: 03:00–04:10, 09:15–10:00, 14:00–14:17; frases exactas pendientes de ORICA. |
-| Estados | Sin selección, consultado, preparado, pendiente de confirmación, en curso, cargado, cerrado, excepción/revisión y fallo. | Modelo de software propuesto por Faro; se concreta en F-02 y F-04. |
+| Estados | Sin selección, consultado, preparado, pendiente de confirmación conceptual, en curso, cargado, cerrado, excepción/revisión y fallo. | Modelo de producto propuesto por Faro; la compuerta de confirmación está preparada en F-22 pero su integración en el dominio/UI sigue pendiente. |
 | Decisión | Una transcripción es entrada; aceptación exige estado, sesión, plan e interbloqueos ficticios válidos. | Regla de seguridad del prototipo propuesta por Faro, no procedimiento oficial. |
 | Resultado | «Completado» aparece solo tras evento final correlacionado del simulador. | ORICA pidió respuesta breve de ejecución (26:43–27:40); correlación es diseño de Faro. |
 | Registro | SQLite guarda entrada, decisión, motivo, estado y eventos; sin audio crudo por defecto. | Trazabilidad propuesta por Faro; política de datos de ORICA pendiente. |
@@ -49,7 +49,7 @@ El diagrama resume el producto; F-02 fijará el orden exacto de cada comando y F
 
 ## Guiones verificables
 
-**Caso normal:** iniciar sesión ficticia; elegir modo voz o manual de prueba; seleccionar un taladro válido; consultar ID, producto y kg; preparar el método; **validar producto y kg contra el plan antes del movimiento**; comprobar zona ficticia despejada; solicitar movimiento; observar `aceptada → en curso → completada`; ejecutar carga simulada; retraer; cerrar; pasar a otro taladro. En cada paso la UI debe mostrar el estado confirmado y la bitácora debe conservar el ID de cada comando y sus eventos correspondientes.
+**Caso normal:** iniciar sesión ficticia; elegir modo voz o manual de prueba; seleccionar un taladro válido; consultar ID, producto y kg; preparar el método; **validar producto y kg contra el plan antes del movimiento**; comprobar zona ficticia despejada; solicitar movimiento (la confirmación explícita queda condicionada a la integración de F-22); observar `aceptada → en curso → completada`; ejecutar carga simulada; retraer; cerrar; pasar a otro taladro. En cada paso la UI debe mostrar el estado confirmado y la bitácora debe conservar el ID de cada comando y sus eventos correspondientes.
 
 **Excepción de plan:** seleccionar un taladro válido y dictar kg o mezcla distintos del plan. Faro muestra valor recibido y plan, rechaza la carga y registra el motivo **sin avanzar el estado operativo**. La discrepancia queda como alerta pendiente. Repetir «sí» o «cargar» no libera el bloqueo; una nueva declaración que coincida exactamente con el plan ficticio puede resolver la alerta y volver a la validación. Ningún dato de ORICA se modifica.
 
@@ -90,4 +90,5 @@ El diagrama resume el producto; F-02 fijará el orden exacto de cada comando y F
 - [x] Los supuestos y decisiones de Faro están separados de las respuestas de ORICA.
 - [x] Cada respuesta pendiente tiene dueño y efecto previsto sobre el alcance.
 - [x] El caso normal y dos excepciones se pueden recorrer sin hardware real.
-- [ ] Una segunda persona del equipo revisó el flujo y registró observaciones. **Pendiente de revisión humana; no cerrar F-01 todavía.**
+- [x] Se revisó la dependencia con F-22 y se eliminó la afirmación de que la confirmación ya está integrada.
+- [ ] Una segunda persona del equipo revisó el flujo y registró observaciones. **Pendiente de revisión cruzada; no cerrar F-01 todavía.**
