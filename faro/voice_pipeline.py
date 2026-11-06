@@ -31,8 +31,13 @@ class VoicePipeline:
                      and self.domain.session.session_id == session_id
                      and self.domain.session.listening)
         parsed = parse_command(transcript, self.plan, listening_active=listening)
-        if not parsed.ok or parsed.command is None:
+        if not parsed.ok:
             return PipelineResult(transcript, parsed, None)
+        if parsed.command is None:
+            decision = self.domain.handle_control(parsed.intent or "unknown_control",
+                                                  session_id=session_id, source=source,
+                                                  generation=generation)
+            return PipelineResult(transcript, parsed, decision)
         command: Command = parsed.command
         # The fictional sensor signal must come from the coordinator/simulator,
         # never from spoken text. Other commands retain their default.

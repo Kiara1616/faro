@@ -14,6 +14,8 @@ def execution_message(hole_id: str | None, action: str, stage: str) -> str:
         "completed": "acción completada en la simulación",
         "rejected": "orden rechazada",
         "failed": "acción fallida; revisar estado",
+        "cancelled": "acción cancelada en la simulación",
+        "timeout": "sin respuesta del simulador; requiere revisión",
         "unknown": "resultado desconocido; requiere revisión",
     }
     action_label = action.replace("_", " ") if action else "acción"

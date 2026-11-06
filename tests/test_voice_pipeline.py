@@ -70,3 +70,15 @@ def test_partial_final_duplicate_are_not_forwarded_twice():
     duplicate = send(pipe, "seleccionar taladro 101")
     assert not duplicate.decision.accepted
     assert duplicate.decision.reason == "current_hole_not_closed"
+
+
+def test_controls_produce_explicit_decisions_and_modes_change():
+    domain, pipe = pipeline(Mode.MANUAL)
+    mode = send(pipe, "cambiar a modo voz")
+    assert mode.decision is not None and mode.decision.accepted
+    assert domain.session.mode is Mode.VOZ
+    assert domain.set_listening("demo-voice", True)
+    denied = send(pipe, "confirmar", source=Source.VOICE,
+                  generation=domain.session.generation)
+    assert denied.decision is not None and not denied.decision.accepted
+    assert denied.decision.reason == "confirmation_not_integrated"

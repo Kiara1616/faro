@@ -13,3 +13,8 @@ def test_messages_include_hole_and_safe_failure_state():
     failed = execution_message("102", "iniciar_carga", "failed")
     assert "Taladro 102" in prompt and "confirmar" in prompt
     assert "revisar estado" in failed
+
+
+def test_messages_include_cancelled_and_timeout_states():
+    assert "cancelada" in execution_message("101", "extender_brazo", "cancelled")
+    assert "sin respuesta" in execution_message("101", "extender_brazo", "timeout")

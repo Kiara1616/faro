@@ -141,6 +141,33 @@ class FaroDomain:
     alert_history: list[Alert] = field(default_factory=list)
     completed_holes: set[str] = field(default_factory=set)
 
+    def handle_control(self, intent: str, *, session_id: str, source: Source,
+                       generation: int | None = None) -> Decision:
+        """Handle parser-level controls so they never disappear silently."""
+        command_id = str(uuid4())
+        before = self.state
+        if self.session is None or self.session.session_id != session_id:
+            return Decision(False, "invalid_session", command_id, before, self.state,
+                            self.selected_hole_id)
+        if source is Source.VOICE:
+            if self.session.mode is not Mode.VOZ or not self.session.listening:
+                return Decision(False, "voice_disabled_in_manual", command_id, before, self.state,
+                                self.selected_hole_id)
+            if generation != self.session.generation:
+                return Decision(False, "stale_listening_generation", command_id, before, self.state,
+                                self.selected_hole_id)
+        if intent == "modo_manual":
+            accepted = self.set_mode(session_id, Mode.MANUAL)
+            reason = "mode_manual" if accepted else "mode_change_blocked"
+        elif intent == "modo_voz":
+            accepted = self.set_mode(session_id, Mode.VOZ)
+            reason = "mode_voice" if accepted else "mode_change_blocked"
+        else:
+            accepted = False
+            reason = "confirmation_not_integrated"
+        return Decision(accepted, reason, command_id, before, self.state,
+                        self.selected_hole_id)
+
     def begin_session(self, session_id: str, operator_label: str, mode: Mode = Mode.MANUAL) -> bool:
         """Start or replace a fictitious session only while no action is pending."""
         if not isinstance(session_id, str) or not session_id.strip() or not isinstance(operator_label, str) or not operator_label.strip():
