@@ -114,3 +114,16 @@ def test_controller_scenario_is_visible_and_isolated(tmp_path):
     assert normal.scenario_name == "normal"
     assert failed.simulator.fail_actions != normal.simulator.fail_actions
     assert normal.simulator.busy is False
+
+
+def test_controller_audit_includes_selected_scenario(tmp_path):
+    scenarios = load_scenarios(Path(__file__).resolve().parents[1] / "fixtures" / "escenarios_demo.json")
+    controller = FaroController.create(PLAN, tmp_path / "scenario.sqlite3", scenario=scenarios["fallo_brazo"])
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    for _ in range(4):
+        controller.tick()
+    rows = controller.audit.list_records()
+    assert any(row["event_status"] == "failed" and "scenario=fallo_brazo" in row["reason"] for row in rows)

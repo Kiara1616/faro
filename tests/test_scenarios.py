@@ -15,20 +15,19 @@ def test_scenarios_are_named_and_reproducible():
     scenarios = load_scenarios(ROOT / "fixtures" / "escenarios_demo.json")
     assert set(scenarios) == {"normal", "zona_ocupada", "fallo_brazo", "demora_timeout", "adaptador_lento"}
     plan = load_demo_plan(ROOT / "fixtures" / "malla_demo.json")
-    a = build_simulator(plan, scenarios["demora_timeout"])
-    b = build_simulator(plan, scenarios["demora_timeout"])
-    assert (a.delay_ticks, a.timeout_ticks, a.fail_actions) == (b.delay_ticks, b.timeout_ticks, b.fail_actions)
     request = ActionRequest("cmd-1", "101", "extender_brazo")
-    events = []
-    for simulator in (a, b):
-        assert simulator.submit(request).status is SimStatus.ACCEPTED
-        sequence = []
-        while simulator.busy:
-            event = simulator.tick()
-            if event is not None:
-                sequence.append((event.status.value, event.reason))
-        events.append(sequence)
-    assert events[0] == events[1]
+    for name, scenario in scenarios.items():
+        repetitions = []
+        for _ in range(2):
+            simulator = build_simulator(plan, scenario)
+            assert simulator.submit(request).status is SimStatus.ACCEPTED
+            sequence = []
+            while simulator.busy:
+                event = simulator.tick()
+                if event is not None:
+                    sequence.append((event.status.value, event.reason))
+            repetitions.append(sequence)
+        assert repetitions[0] == repetitions[1], name
 
 
 def test_scenario_loader_rejects_missing_normal(tmp_path):
