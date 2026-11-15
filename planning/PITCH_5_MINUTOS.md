@@ -1,6 +1,6 @@
 # Faro — guion de presentación de 5 minutos
 
-Versión de referencia: `7cfad46` · fecha de ensayo pendiente. El guion describe
+Versión de referencia: `d4dad23` · fecha de ensayo pendiente. El guion describe
 un simulador local; no afirma conexión con maquinaria ORICA ni ahorros medidos.
 
 ## Guion cronometrado

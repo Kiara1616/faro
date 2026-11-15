@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `d8da12d`  
+**Último commit:** `d4dad23`  
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -21,10 +21,10 @@ independiente y, cuando el criterio lo exige, evidencia manual registrada.
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
 | F-10 | Parcial | `44377ca`, evidencia de captura local | suite + smoke sin frase | CI exitoso | técnica | frase hablada y pérdida de micrófono | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
-| F-12 | Implementada | Qt + resumen de confirmación | Qt offscreen | CI | pendiente manual | captura y tres fixtures | No |
+| F-12 | Implementada | Qt + resumen de confirmación | Qt offscreen | run `43760720277` verde | pendiente manual | captura y tres fixtures | No |
 | F-13 | Implementada | estados textuales y alertas | Qt/integración | CI | parcial | ensayo visual manual | No |
 | F-14 | Parcial | mensajes y fallback teclado | Qt offscreen | CI | pendiente | dos usuarios, ergonomía y TTS | No |
-| F-15 | Parcial | integración voz-parser-dominio-simulador-UI | 173 local | CI | pendiente manual | recorrido voz de dos taladros | No |
+| F-15 | Parcial | integración voz-parser-dominio-simulador-UI | 172 local | run `43760720277` verde | pendiente manual | recorrido voz de dos taladros | No |
 | F-16 | Parcial | diagnóstico, manifiesto y guía | suite + diagnóstico | CI | pendiente | copia limpia sin red y reinicio | No |
 | F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado | matriz automatizada | CI | pendiente | corpus y V-10 | No |
 | F-18 | Pendiente externo | protocolo preparado | no ejecutada | — | pendiente | dos participantes no autores | No |
