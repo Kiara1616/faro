@@ -19,7 +19,10 @@ FORBIDDEN_DIRS = {"private", "briefing", "recordings", "audio"}
 
 def validate_package_clean(root: Path) -> None:
     """Fail closed if a delivery tree contains private or disposable material."""
-    ignored = {".git", ".venv", "__pycache__", ".pytest_cache", "work", "build", "dist"}
+    # ``work`` is not part of the distributed hash, but it is still scanned
+    # for forbidden artifacts so a dirty staging area cannot be mistaken for
+    # a clean delivery.
+    ignored = {".git", ".venv", "__pycache__", ".pytest_cache", "build", "dist"}
     for path in root.rglob("*"):
         relative = path.relative_to(root)
         if any(part in ignored for part in relative.parts):
@@ -39,7 +42,7 @@ def package_files(root: Path) -> list[str]:
         relative = path.relative_to(root)
         if (path.is_file() and not path.is_symlink()
                 and not any(part in ignored for part in relative.parts)
-                and path.name != "manifest.json"
+                and relative.as_posix() != "manifest.json"
                 and path.suffix not in {".pyc", ".pyo"}):
             names.add(relative.as_posix())
     return sorted(names)
