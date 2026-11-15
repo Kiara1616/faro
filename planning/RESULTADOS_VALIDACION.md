@@ -17,6 +17,7 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 | Discrepancias de plan que inician carga | 0 | `test_wrong_values_and_methods_cannot_start_action`, simulador |
 | Diagnóstico offline preparado | `required_ok=true` | Python 3.12.10, PySide6, Vosk, sounddevice, modelo y micrófonos detectados |
 | Smoke UI headless | `Qt smoke UI OK` | `planning/EVIDENCIA_UI_OFFSCREEN_2026-11-15.md`; no evidencia humana |
+| Puerta automatizada de entrega | `OK` tras regenerar manifiesto | `planning/EVIDENCIA_ENTREGA_AUTOMATIZADA_2026-11-15.md` |
 
 ## Casos reproducibles
 

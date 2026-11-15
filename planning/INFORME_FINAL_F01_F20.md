@@ -16,6 +16,10 @@ La ejecución de las validaciones humanas pendientes está preparada en
 `planning/PLAN_VALIDACION_MANUAL.md`; sus campos sin resultado se mantienen
 como pendientes y no se interpretan como aprobados.
 
+La evidencia automatizada de la puerta de entrega (incluido un desajuste de
+manifiesto detectado y corregido) está en
+`planning/EVIDENCIA_ENTREGA_AUTOMATIZADA_2026-11-15.md`.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
