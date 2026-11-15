@@ -20,6 +20,27 @@ class VoiceRecognizerTests(unittest.TestCase):
         self.assertTrue(any(state == "error" and "modelo Vosk" in detail for state, detail in statuses))
         voice.stop()
         self.assertFalse(voice.is_listening)
+        self.assertEqual(voice.capture_state, "stopped")
+        self.assertIn("modelo Vosk", voice.last_error or "")
+
+    def test_failed_capture_can_be_retried_without_duplicate_worker(self):
+        statuses = []
+        voice = VoiceRecognizer("missing-vosk-model", lambda text: None,
+                                lambda state, detail: statuses.append(state))
+        self.assertTrue(voice.start())
+        for _ in range(20):
+            if voice.capture_state == "stopped":
+                break
+            threading.Event().wait(0.02)
+        self.assertEqual(voice.capture_state, "stopped")
+        self.assertTrue(voice.start())
+        for _ in range(20):
+            if voice.capture_state == "stopped" and statuses.count("stopped") >= 2:
+                break
+            threading.Event().wait(0.02)
+        self.assertEqual(statuses.count("starting"), 2)
+        self.assertEqual(statuses.count("stopped"), 2)
+        self.assertFalse(voice.is_listening)
 
     def test_rejects_invalid_audio_configuration(self):
         with self.assertRaises(ValueError):

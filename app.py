@@ -55,6 +55,7 @@ def main() -> int:
         "command_status": "en espera",
         "history": [],
     }
+    voice_error_detail: str | None = None
 
     def snapshot() -> dict:
         hole = domain.selected_hole
@@ -95,15 +96,22 @@ def main() -> int:
         render()
 
     def handle_voice_status(status: str, detail: str) -> None:
+        nonlocal voice_error_detail
         if status == "listening":
+            voice_error_detail = None
             ui_state["listening"] = True
             domain.set_listening(session_id, True)
-        elif status in {"stopped", "error"}:
+        elif status == "error":
+            voice_error_detail = detail or "Micrófono no disponible."
             ui_state["listening"] = False
             domain.set_listening(session_id, False)
-            if status == "error" and domain.pending is None:
+            if domain.pending is None:
                 domain.set_mode(session_id, Mode.MANUAL)
-        ui_state["voice_status"] = detail or status
+        elif status == "stopped":
+            ui_state["listening"] = False
+            domain.set_listening(session_id, False)
+        ui_state["voice_status"] = (voice_error_detail if status == "stopped" and voice_error_detail
+                                     else detail or status)
         render()
 
     def toggle_voice(activate: bool) -> None:

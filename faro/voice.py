@@ -43,11 +43,24 @@ class VoiceRecognizer:
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
+        self._capture_state = "stopped"
+        self._last_error: str | None = None
 
     @property
     def is_listening(self) -> bool:
         with self._lock:
             return self._thread is not None and self._thread.is_alive() and not self._stop.is_set()
+
+    @property
+    def capture_state(self) -> str:
+        """Actual worker state: stopped, starting, listening or error."""
+        with self._lock:
+            return self._capture_state
+
+    @property
+    def last_error(self) -> str | None:
+        with self._lock:
+            return self._last_error
 
     def start(self) -> bool:
         """Start listening without blocking. Return False if already starting/listening."""
@@ -55,6 +68,8 @@ class VoiceRecognizer:
             if self._thread is not None and self._thread.is_alive():
                 return False
             self._stop.clear()
+            self._last_error = None
+            self._capture_state = "starting"
             self._thread = threading.Thread(target=self._run, name="faro-voice", daemon=True)
             self._thread.start()
         return True
@@ -79,6 +94,11 @@ class VoiceRecognizer:
         return devices
 
     def _emit_status(self, status: str, detail: str = "") -> None:
+        with self._lock:
+            if status in {"starting", "listening", "stopped", "error"}:
+                self._capture_state = status
+            if status == "error":
+                self._last_error = detail
         if self.on_status is not None:
             try:
                 self.on_status(status, detail)

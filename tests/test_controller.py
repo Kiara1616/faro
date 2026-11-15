@@ -158,7 +158,7 @@ def test_confirmation_expires_without_execution(tmp_path):
                  "validar producto alfa, cien kilos"):
         assert controller.process(text).decision.accepted
     assert controller.process("extender brazo", zone_clear=True).decision.accepted
-    time.sleep(0.01)
+    time.sleep(0.05)
     expired = controller.process("confirmar")
     assert expired.decision is not None and not expired.decision.accepted
     assert expired.decision.reason == "confirmation_expired"
