@@ -16,6 +16,7 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
 | Discrepancias de plan que inician carga | 0 | `test_wrong_values_and_methods_cannot_start_action`, simulador |
 | Diagnóstico offline preparado | `required_ok=true` | Python 3.12.10, PySide6, Vosk, sounddevice, modelo y micrófonos detectados |
+| Smoke UI headless | `Qt smoke UI OK` | `planning/EVIDENCIA_UI_OFFSCREEN_2026-11-15.md`; no evidencia humana |
 
 ## Casos reproducibles
 

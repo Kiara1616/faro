@@ -25,8 +25,8 @@ como pendientes y no se interpretan como aprobados.
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
 | F-10 | Parcial | `55c887c`, evidencia de captura local | 190 local + 14 dirigidas voz | run `43764847953` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
-| F-12 | Implementada | Qt + resumen de confirmación | Qt offscreen | run `43760720277` verde | pendiente manual | captura y tres fixtures | No |
-| F-13 | Implementada | estados textuales y alertas | Qt/integración | CI | parcial | ensayo visual manual | No |
+| F-12 | Implementada | Qt + resumen de confirmación; smoke `Qt smoke UI OK` | Qt offscreen | run `43765584131` verde | pendiente manual | captura y tres fixtures | No |
+| F-13 | Implementada | estados textuales y alertas; smoke UI documentado | Qt/integración | run `43765584131` verde | parcial | ensayo visual manual | No |
 | F-14 | Parcial | mensajes y fallback teclado | Qt offscreen | CI | pendiente | dos usuarios, ergonomía y TTS | No |
 | F-15 | Parcial | integración voz-parser-dominio-simulador-UI + escenarios offline | 190 local; V-12/V-13 | run `43763297246` verde | pendiente manual | recorrido voz de dos taladros | No |
 | F-16 | Parcial | diagnóstico, manifiesto y guía; `required_ok=true` en Windows 11/Python 3.12.10 | 190 + diagnóstico + manifest | run `43764847953` verde | pendiente manual | copia limpia sin red y reinicio | No |
