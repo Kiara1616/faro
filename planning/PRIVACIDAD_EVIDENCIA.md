@@ -7,8 +7,10 @@
 - Las voces humanas del corpus deben contar con consentimiento; los WAV no se
   suben al repositorio ni a la carpeta de entrega.
 - SQLite de ensayo, WAV, logs y datos personales están excluidos por `.gitignore`.
-- La limpieza de un ensayo consiste en retirar su SQLite y archivos de audio
-  fuera del repositorio; el reporte exportado se conserva solo si está anonimizado.
+- La limpieza de un ensayo consiste en retirar recursivamente su SQLite, WAV y
+  logs fuera del repositorio; el comando rechaza la raíz de un repositorio y no
+  sigue symlinks. El reporte exportado se conserva solo si está anonimizado,
+  incluyendo operador, sesión y transcripción.
 
 Para generar una copia anonimizada y limpiar artefactos de ensayo:
 
