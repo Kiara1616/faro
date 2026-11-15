@@ -30,6 +30,9 @@ versionado de GitHub.
 El inventario local de archivos esenciales y hashes está en
 `planning/EVIDENCIA_MODELO_LOCAL_2026-11-15.md`.
 
+El smoke de exportación redactada de SQLite está en
+`planning/EVIDENCIA_EXPORT_AUDIT_2026-11-15.md`.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
