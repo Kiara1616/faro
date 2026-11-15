@@ -163,6 +163,39 @@ class VoiceRecognizerTests(unittest.TestCase):
                 self.assertNotIn("listening", statuses)
                 self.assertEqual(voice.capture_state, "stopped")
 
+    def test_stop_timeout_zero_does_not_wait_for_blocked_device_open(self):
+        constructor_entered = threading.Event()
+        release_constructor = threading.Event()
+
+        class FakeStream:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        def raw_stream(**kwargs):
+            constructor_entered.set()
+            release_constructor.wait(timeout=2)
+            return FakeStream()
+
+        fake_sounddevice = types.SimpleNamespace(RawInputStream=raw_stream)
+        fake_vosk = types.SimpleNamespace(
+            Model=lambda path: object(),
+            KaldiRecognizer=lambda model, rate, *args: types.SimpleNamespace(
+                AcceptWaveform=lambda chunk: False),
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.dict(sys.modules, {"sounddevice": fake_sounddevice, "vosk": fake_vosk}):
+                voice = VoiceRecognizer(folder, lambda text: None)
+                voice.start()
+                self.assertTrue(constructor_entered.wait(timeout=2))
+                started = time.monotonic()
+                voice.stop(timeout=0)
+                self.assertLess(time.monotonic() - started, 0.2)
+                release_constructor.set()
+                voice.stop(timeout=2)
+
 
 if __name__ == "__main__":
     unittest.main()

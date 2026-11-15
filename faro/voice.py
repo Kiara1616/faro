@@ -93,13 +93,16 @@ class VoiceRecognizer:
         # Serialize the cancellation request with the tiny device-open
         # critical section so stop cannot race between the preflight check and
         # RawInputStream construction.
+        deadline = time.monotonic() + max(0.0, timeout)
         self._stop.set()
-        with self._capture_open_lock:
-            pass
+        remaining = max(0.0, deadline - time.monotonic())
+        acquired = self._capture_open_lock.acquire(timeout=remaining)
+        if acquired:
+            self._capture_open_lock.release()
         with self._lock:
             worker = self._thread
         if worker is not None and worker is not threading.current_thread():
-            worker.join(timeout=timeout)
+            worker.join(timeout=max(0.0, deadline - time.monotonic()))
 
     @staticmethod
     def list_input_devices() -> list[dict[str, object]]:

@@ -106,7 +106,8 @@ def main() -> int:
         if status == "listening":
             voice_error_detail = None
             ui_state["listening"] = True
-            domain.set_listening(session_id, True)
+            if domain.session is None or not domain.session.listening:
+                domain.set_listening(session_id, True)
         elif status == "error":
             voice_error_detail = detail or "Micrófono no disponible."
             ui_state["listening"] = False
