@@ -13,6 +13,8 @@ def clean_evidence(folder: str | Path) -> list[str]:
     root = Path(folder).resolve()
     if not root.is_dir():
         raise FileNotFoundError(root)
+    if (root / ".git").exists():
+        raise ValueError("Refuse limpiar la raíz de un repositorio; use una carpeta de evidencia.")
     removed = []
     for path in root.rglob("*"):
         # Do not follow directories or symlinks; only remove disposable files

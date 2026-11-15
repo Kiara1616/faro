@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from faro.audit import AuditStore
 from scripts.export_audit import export_audit
@@ -31,7 +32,13 @@ def test_export_redacts_operator_and_transcript(tmp_path):
     export_audit(database, output, redact=True)
     record = json.loads(output.read_text(encoding="utf-8"))["records"][0]
     assert record["operator_label"] == "<operator-redacted>"
+    assert record["session_id"] == "<session-redacted>"
     assert record["transcript"] == "<transcript-redacted>"
+
+
+def test_export_rejects_missing_database(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        export_audit(tmp_path / "missing.sqlite3", tmp_path / "out.json")
 
 
 def test_clean_evidence_removes_only_allowed_artifacts(tmp_path):
@@ -49,3 +56,9 @@ def test_clean_evidence_removes_nested_disposable_artifacts_without_following_sy
     removed = clean_evidence(tmp_path)
     assert removed == ["nested/voice.wav"]
     assert (nested / "keep.txt").exists()
+
+
+def test_clean_evidence_refuses_repository_root(tmp_path):
+    (tmp_path / ".git").mkdir()
+    with pytest.raises(ValueError):
+        clean_evidence(tmp_path)

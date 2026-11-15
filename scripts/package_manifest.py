@@ -15,6 +15,21 @@ REQUIRED = (
 )
 
 
+def package_files(root: Path) -> list[str]:
+    """Return deterministic package files, including source and local assets."""
+    names = set(REQUIRED)
+    for directory in ("faro", "fixtures", "scripts", "planning", "models"):
+        base = root / directory
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*"):
+            if (path.is_file() and not path.is_symlink()
+                    and path.suffix not in {".pyc", ".pyo"}
+                    and "__pycache__" not in path.parts):
+                names.add(path.relative_to(root).as_posix())
+    return sorted(names)
+
+
 def digest(path: Path) -> str:
     hasher = hashlib.sha256()
     with path.open("rb") as stream:
@@ -29,7 +44,7 @@ def build_manifest(root: str | Path) -> dict[str, object]:
     if missing:
         raise FileNotFoundError("Missing required package files: " + ", ".join(missing))
     files = {}
-    for relative in REQUIRED:
+    for relative in package_files(root):
         path = root / relative
         files[relative] = digest(path)
     return {"simulation_only": True, "files": files}
@@ -39,7 +54,8 @@ def verify_manifest(root: str | Path, manifest: str | Path) -> list[str]:
     expected = json.loads(Path(manifest).read_text(encoding="utf-8"))
     actual = build_manifest(root)["files"]
     expected_files = expected.get("files", {})
-    mismatches = [name for name in REQUIRED if expected_files.get(name) != actual.get(name)]
+    mismatches = sorted({name for name in set(expected_files) | set(actual)
+                         if expected_files.get(name) != actual.get(name)})
     return mismatches
 
 

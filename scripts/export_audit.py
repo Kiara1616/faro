@@ -10,10 +10,14 @@ from faro.audit import AuditStore
 
 
 def export_audit(database: str | Path, output: str | Path, *, redact: bool = False) -> int:
+    database = Path(database)
+    if not database.is_file():
+        raise FileNotFoundError(f"No existe la bitácora SQLite: {database}")
     records = AuditStore(database).list_records()
     if redact:
         for record in records:
             record["operator_label"] = "<operator-redacted>"
+            record["session_id"] = "<session-redacted>"
             record["transcript"] = "<transcript-redacted>"
     report = {
         "simulation_only": True,

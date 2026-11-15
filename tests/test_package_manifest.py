@@ -34,3 +34,15 @@ def test_manifest_detects_missing_entry(tmp_path):
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(manifest), encoding="utf-8")
     assert "app.py" in verify_manifest(tmp_path, path)
+
+
+def test_manifest_covers_source_tree_and_detects_tamper(tmp_path):
+    prepare(tmp_path)
+    source = tmp_path / "faro"
+    source.mkdir()
+    (source / "controller.py").write_text("safe", encoding="utf-8")
+    manifest = build_manifest(tmp_path)
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    (source / "controller.py").write_text("tampered", encoding="utf-8")
+    assert "faro/controller.py" in verify_manifest(tmp_path, path)
