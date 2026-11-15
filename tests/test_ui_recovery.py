@@ -16,7 +16,6 @@ def qt_app():
     yield app
     app.closeAllWindows()
     app.processEvents()
-    app.quit()
 
 
 def test_manual_recovery_button_is_disabled_until_review(qt_app):
