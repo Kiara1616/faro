@@ -145,6 +145,14 @@ class FaroWindow(QWidget):
         send_button.clicked.connect(self._submit_command)
         command_row.addWidget(send_button)
         command_layout.addLayout(command_row)
+        confirmation_row = QHBoxLayout()
+        confirm_button = QPushButton("Confirmar orden")
+        confirm_button.clicked.connect(lambda: self.command_submitted.emit("confirmar"))
+        cancel_button = QPushButton("Cancelar orden")
+        cancel_button.clicked.connect(lambda: self.command_submitted.emit("cancelar"))
+        confirmation_row.addWidget(confirm_button)
+        confirmation_row.addWidget(cancel_button)
+        command_layout.addLayout(confirmation_row)
         sidebar.addWidget(command_card)
 
         decision_card, decision_layout = _card()
@@ -371,6 +379,15 @@ class FaroWindow(QWidget):
             self.review_progress.setText(
                 str(progress) if isinstance(progress, str) else f"{progress} de {total} pasos completados"
             )
+
+        confirmation = snapshot.get("confirmation")
+        if isinstance(confirmation, Mapping):
+            action = str(confirmation.get("action", "")).replace("_", " ")
+            summary = f"Confirmación pendiente: {action} · taladro {confirmation.get('hole_id', '—')}"
+            if confirmation.get("product"):
+                summary += f" · {confirmation['product']}"
+            self.workflow_status.setText("CONFIRMACIÓN REQUERIDA")
+            self.workflow_detail.setText(summary)
 
         operation = snapshot.get("operation", {})
         if isinstance(operation, Mapping):

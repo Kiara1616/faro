@@ -69,6 +69,7 @@ def main() -> int:
                              "status": domain.state.value, "label": domain.state.value,
                              "total": len(plan.holes), "step": len(domain.completed_holes) + 1,
                              "scenario": controller.scenario_name},
+                "confirmation": controller.confirmation_snapshot(),
                 "history": ui_state["history"],
                 "alert": vars(domain.alert) if domain.alert else None}
 

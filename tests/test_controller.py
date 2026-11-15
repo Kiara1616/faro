@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 
 from faro.controller import FaroController
 from faro.domain import Mode, Source, State
@@ -16,6 +17,13 @@ def complete(controller):
             return event
 
 
+def confirm(controller):
+    result = controller.process("confirmar")
+    assert result.decision is not None and result.decision.accepted
+    assert result.decision.state_after is controller.domain.state
+    return result
+
+
 def test_controller_completes_two_holes_and_audits_events(tmp_path):
     controller = FaroController.create(PLAN, tmp_path / "audit.sqlite3")
     commands = ["seleccionar taladro 101", "consultar taladro 101", "preparar carga",
@@ -23,11 +31,14 @@ def test_controller_completes_two_holes_and_audits_events(tmp_path):
     for text in commands:
         assert controller.process(text).decision.accepted
     assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    confirm(controller)
     complete(controller)
     assert controller.domain.state is State.POSICIONADO
     assert controller.process("iniciar carga").decision.accepted
+    confirm(controller)
     complete(controller)
     assert controller.process("retraer brazo").decision.accepted
+    confirm(controller)
     complete(controller)
     assert controller.process("cerrar taladro").decision.accepted
     assert controller.process("siguiente taladro").decision.accepted
@@ -35,6 +46,7 @@ def test_controller_completes_two_holes_and_audits_events(tmp_path):
                  "validar producto beta, ciento veinte kilos"):
         assert controller.process(text).decision.accepted
     assert controller.process("extender manguera", zone_clear=True).decision.accepted
+    confirm(controller)
     complete(controller)
     rows = controller.audit.list_records()
     assert any(row["event_status"] == "completed" for row in rows)
@@ -67,6 +79,7 @@ def test_controller_timeout_is_audited_and_never_replayed(tmp_path):
                  "validar producto alfa, cien kilos"):
         assert controller.process(text).decision.accepted
     assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    confirm(controller)
     assert controller.tick().status.value == "in_progress"
     timeout = controller.tick()
     assert timeout.status.value == "timeout"
@@ -83,6 +96,7 @@ def test_restart_after_timeout_does_not_replay_or_infer_success(tmp_path):
                  "validar producto alfa, cien kilos"):
         assert controller.process(text).decision.accepted
     assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    confirm(controller)
     assert controller.tick().status.value == "in_progress"
     assert controller.tick().status.value == "timeout"
     restarted = FaroController.create(PLAN, audit_path)
@@ -98,6 +112,7 @@ def test_unknown_result_requires_explicit_manual_recovery(tmp_path):
                  "validar producto alfa, cien kilos"):
         assert controller.process(text).decision.accepted
     assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    confirm(controller)
     controller.tick()
     assert controller.tick().status.value == "timeout"
     assert controller.recover_unknown("operator_review")
@@ -116,6 +131,38 @@ def test_controller_scenario_is_visible_and_isolated(tmp_path):
     assert normal.simulator.busy is False
 
 
+def test_critical_action_waits_for_confirmation_and_cancel_never_submits(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "confirmation.sqlite3")
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    result = controller.process("extender brazo", zone_clear=True)
+    assert result.decision.accepted
+    assert controller.confirmation_pending
+    assert controller.simulator.busy is False
+    cancelled = controller.process("cancelar")
+    assert cancelled.decision.accepted
+    assert not controller.confirmation_pending
+    assert controller.simulator.busy is False
+    assert any(row["event_status"] == "confirmation_cancelled"
+               for row in controller.audit.list_records())
+
+
+def test_confirmation_expires_without_execution(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "expiry.sqlite3")
+    controller.confirmation_ttl = 0.001
+    controller.confirmation_gate.ttl_seconds = 0.001
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    time.sleep(0.01)
+    expired = controller.process("confirmar")
+    assert expired.decision is not None and not expired.decision.accepted
+    assert expired.decision.reason == "confirmation_expired"
+    assert controller.simulator.busy is False
+
+
 def test_controller_audit_includes_selected_scenario(tmp_path):
     scenarios = load_scenarios(Path(__file__).resolve().parents[1] / "fixtures" / "escenarios_demo.json")
     controller = FaroController.create(PLAN, tmp_path / "scenario.sqlite3", scenario=scenarios["fallo_brazo"])
@@ -123,6 +170,7 @@ def test_controller_audit_includes_selected_scenario(tmp_path):
                  "validar producto alfa, cien kilos"):
         assert controller.process(text).decision.accepted
     assert controller.process("extender brazo", zone_clear=True).decision.accepted
+    confirm(controller)
     for _ in range(4):
         controller.tick()
     rows = controller.audit.list_records()

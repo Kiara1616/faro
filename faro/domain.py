@@ -468,6 +468,28 @@ class FaroDomain:
         self.state = State.FALLO
         return True
 
+    def cancel_pending_confirmation(self, command_id: str, state_before: State) -> bool:
+        """Discard a controller-held confirmation without executing its request."""
+        if (self.pending is None or self.pending.command_id != command_id
+                or not isinstance(state_before, State)):
+            return False
+        self.pending = None
+        self.cancel_requested = False
+        self.state = state_before
+        return True
+
+    def authorize_pending_action(self, command_id: str) -> bool:
+        """Promote a controller-confirmed request to execution state."""
+        if self.pending is None or self.pending.command_id != command_id:
+            return False
+        if self.pending.action in {Intent.EXTENDER_BRAZO.value, Intent.EXTENDER_MANGUERA.value}:
+            self.state = State.MOVIMIENTO_EN_CURSO
+        elif self.pending.action == Intent.INICIAR_CARGA.value:
+            self.state = State.CARGA_EN_CURSO
+        else:
+            self.state = State.RETRACCION_EN_CURSO
+        return True
+
     def reject_cancellation(self, target_command_id: str, reason: str) -> bool:
         """Conservatively reconcile a refused cancellation request.
 

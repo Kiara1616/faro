@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import time
 from pathlib import Path
 
 from faro.audit import AuditStore
+from faro.confirmation import ConfirmationGate
 from faro.domain import EventStatus, FaroDomain, Mode, Source, State
 from faro.plan import DemoPlan
 from faro.simulator import SimEvent, SimStatus, SimulatedMMU
@@ -21,6 +23,7 @@ class FaroController:
     simulator: SimulatedMMU
     session_id: str = "demo-session"
     scenario_name: str = "normal"
+    confirmation_ttl: float = 10.0
 
     @classmethod
     def create(cls, plan: DemoPlan, audit_path: str | Path,
@@ -33,6 +36,91 @@ class FaroController:
 
     def __post_init__(self) -> None:
         self.pipeline = VoicePipeline(self.plan, self.domain)
+        self.confirmation_gate = ConfirmationGate(ttl_seconds=self.confirmation_ttl)
+        self._confirmation_request = None
+        self._confirmation_state_before = None
+        self.pipeline.control_handler = self._handle_control
+
+    @property
+    def confirmation_pending(self) -> bool:
+        """Whether a critical request is waiting for explicit operator approval."""
+        return self.confirmation_gate.pending is not None and self._confirmation_request is not None
+
+    def confirmation_snapshot(self) -> dict | None:
+        """Return a UI-safe summary without exposing the confirmation token."""
+        pending = self.confirmation_gate.pending
+        if pending is None or not self.confirmation_pending:
+            return None
+        return {
+            "hole_id": pending.hole_id,
+            "action": pending.action,
+            "product": pending.product,
+            "planned_kg": pending.planned_kg,
+            "expires_at": pending.expires_at,
+        }
+
+    CONFIRMATION_ACTIONS = frozenset({
+        "extender_brazo", "extender_manguera", "iniciar_carga",
+        "retraer_brazo", "retraer_manguera",
+    })
+
+    @staticmethod
+    def _control_decision(accepted, reason, command_id, before, after=None):
+        from faro.domain import Decision
+        return Decision(accepted, reason, command_id, before, after or before, None)
+
+    def _handle_control(self, intent: str, *, session_id: str, source: Source,
+                        generation: int | None = None):
+        if intent in {"modo_manual", "modo_voz"}:
+            return self.domain.handle_control(intent, session_id=session_id,
+                                              source=source, generation=generation)
+        before = self.domain.state
+        control_id = f"control-{time.monotonic_ns()}"
+        pending = self.confirmation_gate.pending
+        if intent == "cancelar_confirmacion":
+            if pending is None or self._confirmation_request is None:
+                return self._control_decision(False, "no_confirmation_pending", control_id, before)
+            request = self._confirmation_request
+            restored = self.domain.cancel_pending_confirmation(request.command_id,
+                                                               self._confirmation_state_before)
+            self.confirmation_gate.cancel()
+            self._confirmation_request = None
+            self._confirmation_state_before = None
+            if not restored:
+                return self._control_decision(False, "confirmation_cancel_failed", control_id, before)
+            self.audit.record_event(request.command_id, "confirmation_cancelled", "cancelled_by_operator")
+            return self._control_decision(True, "confirmation_cancelled", control_id, before)
+        if intent == "confirmar":
+            if pending is None or self._confirmation_request is None:
+                return self._control_decision(False, "no_confirmation_pending", control_id, before)
+            session = self.domain.session
+            accepted, reason = self.confirmation_gate.confirm(
+                token=pending.token, session_id=session_id,
+                mode=session.mode.value if session else "", hole_id=pending.hole_id,
+                action=pending.action, product=pending.product,
+                planned_kg=pending.planned_kg, now=time.monotonic())
+            request = self._confirmation_request
+            state_before = self._confirmation_state_before
+            if not accepted:
+                self.domain.cancel_pending_confirmation(request.command_id, state_before)
+                self._confirmation_request = None
+                self._confirmation_state_before = None
+                self.audit.record_event(request.command_id, f"confirmation_{reason}", reason)
+                return self._control_decision(False, reason, control_id, before)
+            self.domain.authorize_pending_action(request.command_id)
+            event = self.simulator.submit(request)
+            self._confirmation_request = None
+            self._confirmation_state_before = None
+            if event.status is SimStatus.REJECTED:
+                self.domain.reject_submission(request.command_id, event.reason)
+                self.audit.record_event(request.command_id, event.status.value, event.reason)
+                return self._control_decision(False, "simulator_rejected", control_id, before)
+            self.audit.record_event(request.command_id, "confirmation_accepted", "confirmed_by_operator")
+            self.audit.record_event(request.command_id, event.status.value, event.reason)
+            return self._control_decision(True, "confirmed", control_id, before,
+                                          self.domain.state)
+        return self.domain.handle_control(intent, session_id=session_id, source=source,
+                                          generation=generation)
 
     def process(self, text: str, *, source: Source = Source.TEXT,
                 generation: int | None = None, zone_clear: bool = False) -> PipelineResult:
@@ -50,6 +138,20 @@ class FaroController:
             decision="accepted" if decision.accepted else "rejected", reason=decision.reason,
         )
         if decision.request is not None and decision.accepted:
+            if decision.request.action in self.CONFIRMATION_ACTIONS:
+                request = decision.request
+                hole = self.domain.selected_hole
+                session = self.domain.session
+                self.confirmation_gate.request(
+                    token=request.command_id, session_id=self.session_id,
+                    mode=session.mode.value if session else "manual",
+                    hole_id=request.hole_id, action=request.action,
+                    product=request.product or (hole.product if hole and request.action == "iniciar_carga" else None),
+                    planned_kg=request.planned_kg, now=time.monotonic())
+                self._confirmation_request = request
+                self._confirmation_state_before = decision.state_before
+                self.audit.record_event(request.command_id, "confirmation_pending", "confirmation_required")
+                return result
             event = self.simulator.submit(decision.request)
             if event.status is SimStatus.REJECTED:
                 if decision.request.action == "cancel":

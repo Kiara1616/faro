@@ -24,6 +24,7 @@ class VoicePipeline:
             raise ValueError("pipeline and domain must use the same demo plan")
         self.plan = plan
         self.domain = domain
+        self.control_handler = None
 
     def process(self, transcript: str, *, source: Source, session_id: str,
                 generation: int | None = None, zone_clear: bool = False) -> PipelineResult:
@@ -34,9 +35,9 @@ class VoicePipeline:
         if not parsed.ok:
             return PipelineResult(transcript, parsed, None)
         if parsed.command is None:
-            decision = self.domain.handle_control(parsed.intent or "unknown_control",
-                                                  session_id=session_id, source=source,
-                                                  generation=generation)
+            handler = self.control_handler or self.domain.handle_control
+            decision = handler(parsed.intent or "unknown_control", session_id=session_id,
+                               source=source, generation=generation)
             return PipelineResult(transcript, parsed, decision)
         command: Command = parsed.command
         # The fictional sensor signal must come from the coordinator/simulator,
