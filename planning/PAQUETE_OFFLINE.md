@@ -22,3 +22,15 @@ El procedimiento de preparación, hash y transferencia del modelo está en
 `planning/MODELO_VOSK_OFFLINE.md`. Se verifica con
 `scripts/setup_voice_model.py --check` antes de desconectar la red.
 
+Para repetir todos los gates automatizables en Windows desde una copia ya
+preparada, ejecutar:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run_offline_validation.ps1
+```
+
+El runner ejecuta diagnóstico, suite, límite de red, escenarios normal/fallo,
+compilación y manifiesto. Puede tolerar únicamente el código nativo de cierre
+de Qt cuando pytest informa exactamente `195 passed` sin fallos; no sustituye
+la red físicamente desconectada ni las validaciones humanas.
+
