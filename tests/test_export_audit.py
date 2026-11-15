@@ -36,6 +36,19 @@ def test_export_redacts_operator_and_transcript(tmp_path):
     assert record["transcript"] == "<transcript-redacted>"
 
 
+def test_export_redacts_free_text_reason(tmp_path):
+    database = tmp_path / "audit.sqlite3"
+    store = AuditStore(database)
+    store.record_decision(command_id="c1", session_id="s1", operator_label="demo",
+                          source="text", transcript="estado", intent="consultar_estado",
+                          hole_id=None, state_before="a", state_after="a", accepted=False,
+                          decision="rejected", reason="persona@example.com")
+    output = tmp_path / "redacted.json"
+    export_audit(database, output)
+    record = json.loads(output.read_text(encoding="utf-8"))["records"][0]
+    assert record["reason"] == "<reason-redacted>"
+
+
 def test_export_rejects_missing_database(tmp_path):
     with pytest.raises(FileNotFoundError):
         export_audit(tmp_path / "missing.sqlite3", tmp_path / "out.json")

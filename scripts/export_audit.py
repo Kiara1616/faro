@@ -19,6 +19,7 @@ def export_audit(database: str | Path, output: str | Path, *, redact: bool = Tru
             record["operator_label"] = "<operator-redacted>"
             record["session_id"] = "<session-redacted>"
             record["transcript"] = "<transcript-redacted>"
+            record["reason"] = "<reason-redacted>"
     report = {
         "simulation_only": True,
         "audio_included": False,

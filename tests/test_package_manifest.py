@@ -56,3 +56,11 @@ def test_manifest_rejects_private_or_audio_material(tmp_path, relative):
     path.write_text("private", encoding="utf-8")
     with pytest.raises(ValueError):
         build_manifest(tmp_path)
+
+
+def test_manifest_hashes_additional_top_level_files(tmp_path):
+    prepare(tmp_path)
+    extra = tmp_path / "notes.txt"
+    extra.write_text("one", encoding="utf-8")
+    manifest = build_manifest(tmp_path)
+    assert "notes.txt" in manifest["files"]

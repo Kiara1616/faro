@@ -34,15 +34,14 @@ def validate_package_clean(root: Path) -> None:
 def package_files(root: Path) -> list[str]:
     """Return deterministic package files, including source and local assets."""
     names = set(REQUIRED)
-    for directory in ("faro", "fixtures", "scripts", "planning", "models"):
-        base = root / directory
-        if not base.is_dir():
-            continue
-        for path in base.rglob("*"):
-            if (path.is_file() and not path.is_symlink()
-                    and path.suffix not in {".pyc", ".pyo"}
-                    and "__pycache__" not in path.parts):
-                names.add(path.relative_to(root).as_posix())
+    ignored = {".git", ".venv", "__pycache__", ".pytest_cache", "work", "build", "dist"}
+    for path in root.rglob("*"):
+        relative = path.relative_to(root)
+        if (path.is_file() and not path.is_symlink()
+                and not any(part in ignored for part in relative.parts)
+                and path.name != "manifest.json"
+                and path.suffix not in {".pyc", ".pyo"}):
+            names.add(relative.as_posix())
     return sorted(names)
 
 
