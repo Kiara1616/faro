@@ -29,6 +29,8 @@ usarse como resultado positivo.
 - Escenarios offline normal y fallo inyectado.
 - Diagnóstico offline `required_ok=true` en Windows 11/Python 3.12.10.
 - `setup_voice_model.py --check` devuelve `Modelo instalado` en la laptop preparada.
+- Inventario local de 14 archivos y hashes esenciales en
+  `planning/EVIDENCIA_MODELO_LOCAL_2026-11-15.md`.
 - Smoke UI Qt offscreen `Qt smoke UI OK`.
 - Manifiesto regenerado y verificado `OK`.
 - No hay corpus WAV humano en el repositorio; no se declara precisión de voz.

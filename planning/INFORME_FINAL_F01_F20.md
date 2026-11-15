@@ -27,6 +27,9 @@ La preparación y transferencia offline del modelo Vosk están especificadas en
 `planning/MODELO_VOSK_OFFLINE.md`; `models/` no se presenta como contenido
 versionado de GitHub.
 
+El inventario local de archivos esenciales y hashes está en
+`planning/EVIDENCIA_MODELO_LOCAL_2026-11-15.md`.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |

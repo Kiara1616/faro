@@ -37,5 +37,8 @@ Registrar en el acta:
 - resultado del manifiesto de la copia preparada;
 - confirmación de que la aplicación inicia sin red.
 
+El inventario actual de esta laptop está en
+`planning/EVIDENCIA_MODELO_LOCAL_2026-11-15.md`.
+
 No se debe afirmar que el modelo está incluido en GitHub: la evidencia válida
 es la copia offline preparada y su hash cotejado por una segunda persona.
