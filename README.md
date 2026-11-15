@@ -91,11 +91,14 @@ Una respuesta hablada local podría añadirse para navegación y lectura de esta
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_offline_validation.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify_clean_copy.ps1
 ```
 
 El segundo comando repite los gates automatizables de diagnóstico, suite,
 escenarios, límite offline, compilación y manifiesto. No reemplaza la prueba
 con personas, la desconexión física de red ni una validación industrial.
+El tercer comando reconstruye una copia temporal desde Git, incorpora el
+modelo local y repite los gates antes de eliminarla.
 
 Antes del pitch: probar el micrófono y EPP reales, con varias voces y ruido representativo; medir comandos correctos, rechazos y activaciones accidentales; ensayar sin Internet. El reconocimiento con audio de prueba **no demuestra rendimiento en una operación minera**.
 

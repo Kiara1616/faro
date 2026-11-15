@@ -34,3 +34,13 @@ compilación y manifiesto. Puede tolerar únicamente el código nativo de cierre
 de Qt cuando pytest informa exactamente `195 passed` sin fallos; no sustituye
 la red físicamente desconectada ni las validaciones humanas.
 
+Para validar además una copia limpia reconstruida desde el commit actual,
+incluyendo el modelo local, ejecutar:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify_clean_copy.ps1
+```
+
+El script elimina la copia temporal al terminar y no modifica el árbol de
+trabajo.
+
