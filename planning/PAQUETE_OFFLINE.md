@@ -18,6 +18,7 @@ ausente, añadido o modificado dentro del árbol distribuible produce `MISMATCH`
 escanea para rechazar audio, SQLite, logs o material privado antes de entregar.
 No se ignora silenciosamente un cambio en código, fixtures, documentación,
 scripts o modelo.
-El modelo Vosk se prepara antes de desconectar la red y se verifica con
-`scripts/setup_voice_model.py --check`.
+El procedimiento de preparación, hash y transferencia del modelo está en
+`planning/MODELO_VOSK_OFFLINE.md`. Se verifica con
+`scripts/setup_voice_model.py --check` antes de desconectar la red.
 

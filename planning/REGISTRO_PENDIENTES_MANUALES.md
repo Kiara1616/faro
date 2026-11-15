@@ -28,6 +28,7 @@ usarse como resultado positivo.
 - 191 pruebas automatizadas aprobadas (190 no-UI + 1 UI offscreen aislada).
 - Escenarios offline normal y fallo inyectado.
 - Diagnóstico offline `required_ok=true` en Windows 11/Python 3.12.10.
+- `setup_voice_model.py --check` devuelve `Modelo instalado` en la laptop preparada.
 - Smoke UI Qt offscreen `Qt smoke UI OK`.
 - Manifiesto regenerado y verificado `OK`.
 - No hay corpus WAV humano en el repositorio; no se declara precisión de voz.

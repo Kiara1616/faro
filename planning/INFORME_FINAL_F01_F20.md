@@ -23,6 +23,10 @@ manifiesto detectado y corregido) está en
 El inventario de responsables y criterios de cierre para las pruebas todavía
 manuales está en `planning/REGISTRO_PENDIENTES_MANUALES.md`.
 
+La preparación y transferencia offline del modelo Vosk están especificadas en
+`planning/MODELO_VOSK_OFFLINE.md`; `models/` no se presenta como contenido
+versionado de GitHub.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
