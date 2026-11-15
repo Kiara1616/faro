@@ -12,7 +12,11 @@ from faro.ui import FaroWindow
 @pytest.fixture(scope="module")
 def qt_app():
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    return QApplication.instance() or QApplication([])
+    app = QApplication.instance() or QApplication([])
+    yield app
+    app.closeAllWindows()
+    app.processEvents()
+    app.quit()
 
 
 def test_manual_recovery_button_is_disabled_until_review(qt_app):
