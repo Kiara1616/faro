@@ -20,6 +20,9 @@ La evidencia automatizada de la puerta de entrega (incluido un desajuste de
 manifiesto detectado y corregido) está en
 `planning/EVIDENCIA_ENTREGA_AUTOMATIZADA_2026-11-15.md`.
 
+El inventario de responsables y criterios de cierre para las pruebas todavía
+manuales está en `planning/REGISTRO_PENDIENTES_MANUALES.md`.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
