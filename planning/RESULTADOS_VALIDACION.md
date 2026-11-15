@@ -9,8 +9,8 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
 | Pruebas automatizadas exitosas | 194/194 | 191 no-UI + 3 UI offscreen, ejecutados aislados por estabilidad nativa Qt |
-| CI Windows exitoso | pendiente | guard offline añadido; esperar run del commit actual |
-| CI Windows del commit actual | pendiente | guard offline añadido; esperar run del commit actual |
+| CI Windows exitoso | 1/1 | run `43769389005`, tests + importación UI + guard offline |
+| CI Windows del commit actual | 1/1 | run `43769389005`, tests + importación UI + guard offline |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
