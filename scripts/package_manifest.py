@@ -88,6 +88,7 @@ def main() -> int:
         mismatches = verify_manifest(args.root, args.manifest)
         print("OK" if not mismatches else "MISMATCH: " + ", ".join(mismatches))
         return 0 if not mismatches else 1
+    args.manifest.parent.mkdir(parents=True, exist_ok=True)
     args.manifest.write_text(json.dumps(build_manifest(args.root), indent=2), encoding="utf-8")
     print(f"Manifest written: {args.manifest}")
     return 0

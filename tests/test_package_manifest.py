@@ -81,3 +81,16 @@ def test_manifest_hashes_nested_manifest_files(tmp_path):
     nested.parent.mkdir(parents=True, exist_ok=True)
     nested.write_text("nested", encoding="utf-8")
     assert "fixtures/manifest.json" in build_manifest(tmp_path)["files"]
+
+
+def test_cli_manifest_generation_creates_missing_parent(tmp_path):
+    prepare(tmp_path)
+    from scripts.package_manifest import main
+    import sys
+    original = sys.argv
+    try:
+        sys.argv = ["package_manifest.py", str(tmp_path), str(tmp_path / "work" / "nested" / "manifest.json")]
+        assert main() == 0
+    finally:
+        sys.argv = original
+    assert (tmp_path / "work" / "nested" / "manifest.json").is_file()
