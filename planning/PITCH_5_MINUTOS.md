@@ -1,6 +1,6 @@
 # Faro — guion de presentación de 5 minutos
 
-Versión de referencia: `pendiente de commit` · fecha de ensayo pendiente. El guion describe
+Versión de referencia: `b9bd32c` · fecha de ensayo pendiente. El guion describe
 un simulador local; no afirma conexión con maquinaria ORICA ni ahorros medidos.
 
 ## Guion cronometrado
