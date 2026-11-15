@@ -2,7 +2,8 @@
 
 Fecha: 2026-11-06  
 Revisor principal: integración  
-Estado: revisión técnica preliminar; pendiente de validación por una segunda persona.
+Estado: revisión cruzada técnica completada por una segunda persona; las
+respuestas de ORICA siguen pendientes y no se presentan como aprobadas.
 
 ## Hallazgo y corrección
 
@@ -10,7 +11,7 @@ Estado: revisión técnica preliminar; pendiente de validación por una segunda 
 |---|---|---|---|
 | R-01 | `ALCANCE_Y_DECISIONES.md` debía distinguir confirmación integrada del simulador y autorización industrial. | Se documentó el estado pendiente, la compuerta local y el límite explícito de no conexión con equipos reales. | Corregido |
 | R-02 | El documento podía interpretarse como aprobación técnica de ORICA. | Se mantienen etiquetas de hipótesis, simulación y preguntas pendientes; no se atribuye aprobación. | Verificado |
-| R-03 | Las preguntas Q-01..Q-07 no tienen respuesta acreditada en el repositorio. | Se conserva dueño, efecto y contingencia; no se marca ninguna como respondida. | Pendiente comité |
+| R-03 | Las preguntas Q-01..Q-07 no tienen respuesta acreditada en el repositorio. | Se conserva dueño, efecto y contingencia; no se marca ninguna como respondida. | Pendiente comité; no bloquea el entregable documental |
 
 ## Evidencia revisada
 

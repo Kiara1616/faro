@@ -91,4 +91,4 @@ El diagrama resume el producto; F-02 fijará el orden exacto de cada comando y F
 - [x] Cada respuesta pendiente tiene dueño y efecto previsto sobre el alcance.
 - [x] El caso normal y dos excepciones se pueden recorrer sin hardware real.
 - [x] Se revisó la dependencia con F-22 y se documentó que la confirmación integrada solo protege el simulador local; no autoriza equipos reales.
-- [ ] Una segunda persona del equipo revisó el flujo y registró observaciones. **Pendiente de revisión cruzada; no cerrar F-01 todavía.**
+- [x] Una segunda persona del equipo revisó el flujo y registró observaciones en `ACTA_REVISION_F01.md` (`f01_review_final`, 2026-11-06). Las respuestas de ORICA permanecen como preguntas pendientes.
