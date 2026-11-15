@@ -42,5 +42,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify_clean_copy.ps
 ```
 
 El script elimina la copia temporal al terminar y no modifica el árbol de
-trabajo.
+trabajo. La ejecución observada del 2026-11-15 está resumida en
+`planning/EVIDENCIA_COPIA_LIMPIA_2026-11-15.md`.
 

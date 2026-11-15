@@ -40,6 +40,9 @@ El límite estático de red del runtime está comprobado en
 `planning/EVIDENCIA_LIMITE_OFFLINE_2026-11-15.md`; la red física sigue siendo
 un gate manual.
 
+La ejecución de una copia limpia reconstruida desde Git está documentada en
+`planning/EVIDENCIA_COPIA_LIMPIA_2026-11-15.md`.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
