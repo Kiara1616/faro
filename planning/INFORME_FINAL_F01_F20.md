@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `55c887c`  
+**Último commit:** `6d91444`  
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -29,7 +29,7 @@ independiente y, cuando el criterio lo exige, evidencia manual registrada.
 | F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado | matriz automatizada | CI | pendiente | corpus y V-10 | No |
 | F-18 | Pendiente externo | protocolo preparado | no ejecutada | — | pendiente | dos participantes no autores | No |
 | F-19 | Parcial | pitch, FAQ y fallback | documental | CI | pendiente | ensayo cronometrado y acta | No |
-| F-20 | Pendiente | checklist y manifiesto preparados | comandos disponibles | CI | pendiente | paquete limpio, tag y cotejo cruzado | No |
+| F-20 | Pendiente | manifiesto fail-closed y checklist | 187 local + manifest OK | CI en ejecución | pendiente | paquete limpio, tag y cotejo cruzado | No |
 
 ## Arquitectura y flujo
 
