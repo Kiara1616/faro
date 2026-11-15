@@ -1,6 +1,6 @@
 # Resultados de validación de Faro
 
-Fecha de corte: 2026-11-04 · versión: `8dc8bfc` · entorno local: Windows 11,
+Fecha de corte: 2026-11-15 · versión: `7cfad46` · entorno local: Windows 11,
 Python 3.12.10. Esta matriz valida únicamente el simulador ficticio; no es una
 certificación de seguridad ni una validación de maquinaria ORICA.
 
@@ -8,8 +8,8 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
-| Pruebas automatizadas exitosas | 142/142 | `python -m pytest -q` local |
-| CI Windows exitoso | 1/1 | run `41794692550`, tests + importación UI |
+| Pruebas automatizadas exitosas | 171/171 | `python -m pytest -q` local (1 omitida por dependencia opcional) |
+| CI Windows exitoso | pendiente para `7cfad46` | run asociado al SHA; el run anterior `43759846118` mostró 171 pruebas pero terminó con código 1 y requiere diagnóstico |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
@@ -48,4 +48,5 @@ mezclarlos con audio sintético.
 - [x] Auditoría local no almacena audio.
 - [ ] Ejecutar V-10 y el corpus humano autorizado en la laptop de demostración.
 - [ ] Revisión cruzada por una segunda persona y adjuntar JSON del diagnóstico offline.
+- [x] Confirmación crítica, expiración, cancelación, contexto y generación de voz obsoleta probados en controlador.
 
