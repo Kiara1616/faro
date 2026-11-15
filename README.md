@@ -1,6 +1,6 @@
 # Faro — prototipo del Reto 3 ORICA
 
-Aplicación de escritorio para demostrar interacción por voz en una **consola ficticia**. El proyecto se presentó inicialmente como SafeFlow AI y ahora se llama **Faro** para facilitar la invocación oral. No se conecta a maquinaria, PLC, LOADPlus, sistemas de iniciación ni controles físicos. Los indicadores, umbrales y pasos actuales son datos de demostración y se reemplazarán por el flujo de carguío por taladro descrito en el briefing.
+Aplicación de escritorio para demostrar interacción por voz en una **consola ficticia de carguío por taladro**. El proyecto se presentó inicialmente como SafeFlow AI y ahora se llama **Faro** para facilitar la invocación oral. No se conecta a maquinaria, PLC, LOADPlus, sistemas de iniciación ni controles físicos. La malla, productos, kilos, brazo, manguera y estados son datos de demostración; no son parámetros operativos de ORICA.
 
 El [plan de integración](planning/PLAN_FARO_ORICA.md), la [arquitectura](planning/ARQUITECTURA_FARO.md) y el [backlog de issues](planning/ISSUES_FARO_ORICA.md) organizan ese cambio hasta la entrega del proyecto el 10 de noviembre.
 
@@ -8,7 +8,8 @@ El trabajo del equipo se coordina en los [issues del repositorio privado](https:
 
 ## Qué demuestra
 
-- Una interfaz local con vistas de estado, indicadores y revisión auxiliar.
+- Una interfaz local con malla ficticia, taladro activo, producto, kg, método,
+  sesión, modo, estado de ejecución, alertas y bitácora.
 - Comandos de voz en español reconocidos sin Internet mediante Vosk, activados explícitamente por el usuario.
 - El mismo motor determinista para comandos hablados o escritos: lista cerrada, contexto de tarea, rechazo de órdenes ambiguas y bloqueo ante discrepancias.
 - Bitácora local en SQLite (`data/decisions.sqlite3`), además de historial visible. No guarda audio crudo.
@@ -57,14 +58,14 @@ Con la escucha ya activa, se puede anteponer **«Oye Faro»** o **«Faro»** a u
 
 ## Guion corto de demostración
 
-1. `mostrar indicadores` cambia la vista ficticia.
-2. `iniciar revisión auxiliar` abre el primer paso.
-3. `consultar temperatura` presenta la referencia simulada.
-4. `registrar temperatura cuarenta y dos grados` compara el dictado con la referencia.
-5. `confirmar paso` avanza. `siguiente paso` antes de registrar se rechaza y queda en la bitácora.
-6. Reiniciar la revisión y decir `registrar temperatura 50 grados` tras consultar muestra una discrepancia que requiere revisión humana; no confirma el paso.
+1. Seleccionar el taladro `101` y consultar su plan ficticio.
+2. Preparar la carga y validar producto `alfa` y `cien kilos` contra el plan.
+3. Solicitar `extender brazo`, confirmar y observar `aceptada → en curso → completada`.
+4. Solicitar `iniciar carga`, confirmar, retraer y cerrar el taladro.
+5. Avanzar al taladro `102` y repetir con `beta` y `ciento veinte kilos`.
+6. Repetir con `FARO_SCENARIO=fallo_brazo`: el movimiento termina en `fallo`, no se marca cargado y queda auditado.
 
-Los siguientes pasos usan `consultar presion` / `registrar presion cuatro coma dos bar` y `consultar bateria` / `registrar bateria ochenta y siete por ciento`. También pueden usarse los valores numéricos escritos `4,2` y `87`. Los valores y tolerancias no representan especificaciones industriales.
+Todos los datos son ficticios y no representan especificaciones industriales.
 
 ## Componentes y responsables
 
