@@ -12,6 +12,10 @@ Este informe es trazabilidad de implementación. Una issue no se considera
 cerrada por tener código: requiere pruebas, documentación, revisión
 independiente y, cuando el criterio lo exige, evidencia manual registrada.
 
+La ejecución de las validaciones humanas pendientes está preparada en
+`planning/PLAN_VALIDACION_MANUAL.md`; sus campos sin resultado se mantienen
+como pendientes y no se interpretan como aprobados.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |

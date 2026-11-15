@@ -3,6 +3,9 @@
 Este documento se ejecuta antes de crear el tag final. No reemplaza el ensayo
 manual ni autoriza una conexión a maquinaria real.
 
+El procedimiento paso a paso y las hojas de registro están en
+`planning/PLAN_VALIDACION_MANUAL.md`.
+
 ## 1. Identidad de la versión
 
 - [ ] Registrar commit exacto y tag (`faro-demo-YYYYMMDD`).
