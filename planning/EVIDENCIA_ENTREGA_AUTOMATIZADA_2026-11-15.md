@@ -1,7 +1,7 @@
 # Evidencia automatizada de entrega
 
 Fecha de ejecución: 2026-11-15  
-Commit de código/documentación: `69c36ef`  
+Commit de código/documentación: `69c36ef`
 Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 ## Resultados
