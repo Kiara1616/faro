@@ -8,11 +8,12 @@ Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 | Gate | Resultado observado |
 |---|---|
-| Suite aislada | `190 passed` no-UI + `1 passed` UI offscreen |
+| Suite aislada | `190 passed` no-UI + `3 passed` UI offscreen |
 | Escenario normal | `simulation_only=true`, taladros 101 y 102, estado `cerrado`, 6 terminales `completed` |
 | Escenario de fallo | `fallo_brazo`, estado `fallo`, 1 terminal `failed`, 0 taladros completados |
 | Diagnóstico offline | `required_ok=true`; plan, modelo, PySide6, pytest, Vosk, sounddevice y micrófonos detectados |
 | Manifiesto | regenerado para el contenido actual y `--verify` devuelve `OK` |
+| CI Qt Windows | run `43768610935` verde tras corregir teardown de `QApplication` |
 
 ## Incidencia detectada durante la verificación
 
