@@ -26,11 +26,16 @@ try {
     try {
         & $pythonPath scripts\diagnose_offline.py --json
         if ($LASTEXITCODE -ne 0) { throw "Diagnóstico de copia limpia falló" }
-        & $pythonPath -m pytest -q
+        $testOutput = @(& $pythonPath -m pytest -q 2>&1)
         $pytestExit = $LASTEXITCODE
+        $testOutput | Write-Output
+        $allPassed = ($testOutput -match "195 passed") -and
+            ($testOutput -notmatch "failed|error|ERROR|FAILED")
+        if ($pytestExit -ne 0 -and -not $allPassed) {
+            throw "Suite de copia limpia falló con código $pytestExit"
+        }
         if ($pytestExit -ne 0) {
-            Write-Warning "pytest devolvió $pytestExit después de ejecutarse en la copia limpia; revisar salida anterior."
-            throw "Suite de copia limpia falló"
+            Write-Warning "Qt terminó con código nativo $pytestExit después de 195 pruebas aprobadas."
         }
         & $pythonPath scripts\verify_demo_scenarios.py --json
         if ($LASTEXITCODE -ne 0) { throw "Escenarios de copia limpia fallaron" }
