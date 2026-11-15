@@ -51,7 +51,7 @@ Get-ChildItem -Recurse -File faro,fixtures,planning,scripts,models |
 
 | Área | Responsable | Evidencia | Estado |
 |---|---|---|---|
-| Reglas y simulador | Integración/dominio | 194 pruebas locales (191 no-UI + 3 UI aisladas); escenarios V-12/V-13; CI run 43769389005 | Confirmar en ensayo |
+| Reglas y simulador | Integración/dominio | 195 pruebas locales (192 no-UI + 3 UI aisladas); escenarios V-12/V-13; CI pendiente de guard documental | Confirmar en ensayo |
 | Voz local | Voz/QA | diagnóstico + corpus autorizado | Micrófono real pendiente |
 | UI y fallback | Producto/interfaz | pitch + prueba de comprensión | Participantes pendientes |
 | Seguridad y límites | Producto/seguridad | contrato + matriz | Revisión cruzada pendiente |

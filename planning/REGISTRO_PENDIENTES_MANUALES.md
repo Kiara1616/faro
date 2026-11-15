@@ -25,7 +25,7 @@ usarse como resultado positivo.
 
 ## Evidencia ya disponible
 
-- 194 pruebas automatizadas aprobadas (191 no-UI + 3 UI offscreen aisladas).
+- 195 pruebas automatizadas aprobadas (192 no-UI + 3 UI offscreen aisladas).
 - Escenarios offline normal y fallo inyectado.
 - Diagnóstico offline `required_ok=true` en Windows 11/Python 3.12.10.
 - `setup_voice_model.py --check` devuelve `Modelo instalado` en la laptop preparada.

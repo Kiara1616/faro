@@ -8,7 +8,7 @@ Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 | Gate | Resultado observado |
 |---|---|
-| Suite aislada | `191 passed` no-UI + `3 passed` UI offscreen |
+| Suite aislada | `192 passed` no-UI + `3 passed` UI offscreen |
 | Escenario normal | `simulation_only=true`, taladros 101 y 102, estado `cerrado`, 6 terminales `completed` |
 | Escenario de fallo | `fallo_brazo`, estado `fallo`, 1 terminal `failed`, 0 taladros completados |
 | Diagnóstico offline | `required_ok=true`; plan, modelo, PySide6, pytest, Vosk, sounddevice y micrófonos detectados |
