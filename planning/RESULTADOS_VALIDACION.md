@@ -1,6 +1,6 @@
 # Resultados de validación de Faro
 
-Fecha de corte: 2026-11-15 · versión: `f931f6e` · entorno local: Windows 11,
+Fecha de corte: 2026-11-15 · versión: `pendiente de commit` · entorno local: Windows 11,
 Python 3.12.10. Esta matriz valida únicamente el simulador ficticio; no es una
 certificación de seguridad ni una validación de maquinaria ORICA.
 
@@ -8,16 +8,16 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
-| Pruebas automatizadas exitosas | 193/193 | 190 no-UI + 3 UI offscreen, ejecutados aislados por estabilidad nativa Qt |
-| CI Windows exitoso | 1/1 | run `43768610935`, tests + importación UI |
-| CI Windows del commit actual | 1/1 | run `43768610935`, tests + importación UI |
-| CI Windows del commit más reciente | 1/1 | run `43768610935`, tests + importación UI |
+| Pruebas automatizadas exitosas | 194/194 | 191 no-UI + 3 UI offscreen, ejecutados aislados por estabilidad nativa Qt |
+| CI Windows exitoso | pendiente | guard offline añadido; esperar run del commit actual |
+| CI Windows del commit actual | pendiente | guard offline añadido; esperar run del commit actual |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
 | Discrepancias de plan que inician carga | 0 | `test_wrong_values_and_methods_cannot_start_action`, simulador |
 | Diagnóstico offline preparado | `required_ok=true` | Python 3.12.10, PySide6, Vosk, sounddevice, modelo y micrófonos detectados |
 | Smoke UI headless | `Qt smoke UI OK` | `planning/EVIDENCIA_UI_OFFSCREEN_2026-11-15.md`; no evidencia humana |
+| Límite offline estático | `runtime_network_violations=[]` | `scripts/check_offline_boundary.py`; no sustituye desconexión física |
 | Puerta automatizada de entrega | `OK` tras regenerar manifiesto | `planning/EVIDENCIA_ENTREGA_AUTOMATIZADA_2026-11-15.md` |
 
 ## Casos reproducibles

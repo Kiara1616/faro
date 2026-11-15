@@ -33,24 +33,28 @@ El inventario local de archivos esenciales y hashes está en
 El smoke de exportación redactada de SQLite está en
 `planning/EVIDENCIA_EXPORT_AUDIT_2026-11-15.md`.
 
+El límite estático de red del runtime está comprobado en
+`planning/EVIDENCIA_LIMITE_OFFLINE_2026-11-15.md`; la red física sigue siendo
+un gate manual.
+
 ## Estado por issue
 
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
 |---|---|---|---|---|---|---|---|
 | F-01 | Cerrada | alcance, decisiones y preguntas ORICA | documental | histórico | aprobada | ninguno técnico | Sí |
-| F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 193 local (190 no-UI + 3 UI) | CI exitoso | aprobada código | revisión manual voz/lógica/UI | No |
+| F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 194 local (191 no-UI + 3 UI) | CI pendiente guard offline | aprobada código | revisión manual voz/lógica/UI | No |
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
-| F-10 | Parcial | `55c887c`, evidencia de captura local | 193 local + 14 dirigidas voz | run `43768610935` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
+| F-10 | Parcial | `55c887c`, evidencia de captura local | 194 local + 14 dirigidas voz | CI pendiente guard offline | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
-| F-12 | Implementada | Qt + resumen de confirmación; contrato visual y smoke | Qt offscreen, 3 pruebas UI | run `43768610935` verde | `/root/ui_contract_reviewer` aprobó código | captura y tres fixtures | No |
-| F-13 | Implementada | estados textuales y alertas; contrato visual | Qt/integración, 3 pruebas UI | run `43768610935` verde | `/root/ui_contract_reviewer` aprobó código | ensayo visual manual | No |
+| F-12 | Implementada | Qt + resumen de confirmación; contrato visual y smoke | Qt offscreen, 3 pruebas UI | CI pendiente guard offline | `/root/ui_contract_reviewer` aprobó código | captura y tres fixtures | No |
+| F-13 | Implementada | estados textuales y alertas; contrato visual | Qt/integración, 3 pruebas UI | CI pendiente guard offline | `/root/ui_contract_reviewer` aprobó código | ensayo visual manual | No |
 | F-14 | Parcial | mensajes y fallback teclado | Qt offscreen | CI | pendiente | dos usuarios, ergonomía y TTS | No |
-| F-15 | Parcial | integración voz-parser-dominio-simulador-UI + escenarios offline | 193 local; V-12/V-13 | run `43768610935` verde | pendiente manual | recorrido voz de dos taladros | No |
-| F-16 | Parcial | diagnóstico, manifiesto y guía; `required_ok=true` en Windows 11/Python 3.12.10 | 193 + diagnóstico + manifest | run `43768610935` verde | pendiente manual | copia limpia sin red y reinicio | No |
-| F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado; V-12/V-13 | 193 local | run `43768610935` verde | `/root/demo_reviewer` aprobó escenarios | corpus y V-10 | No |
+| F-15 | Parcial | integración voz-parser-dominio-simulador-UI + escenarios offline | 194 local; V-12/V-13 | CI pendiente guard offline | pendiente manual | recorrido voz de dos taladros | No |
+| F-16 | Parcial | diagnóstico, manifiesto, límite offline y guía; `required_ok=true` | 194 + diagnóstico + manifest | CI pendiente guard offline | pendiente manual | copia limpia sin red y reinicio | No |
+| F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado; V-12/V-13 | 194 local | CI pendiente guard offline | `/root/demo_reviewer` aprobó escenarios | corpus y V-10 | No |
 | F-18 | Pendiente externo | protocolo preparado | no ejecutada | — | pendiente | dos participantes no autores | No |
 | F-19 | Parcial | pitch, FAQ y fallback | documental | CI | pendiente | ensayo cronometrado y acta | No |
-| F-20 | Pendiente | manifiesto fail-closed y checklist | 193 local + manifest OK; V-12/V-13 | run `43768610935` verde | pendiente | paquete limpio, tag y cotejo cruzado | No |
+| F-20 | Pendiente | manifiesto fail-closed, límite offline y checklist | 194 local + manifest OK; V-12/V-13 | CI pendiente guard offline | pendiente | paquete limpio, tag y cotejo cruzado | No |
 
 ## Arquitectura y flujo
 
