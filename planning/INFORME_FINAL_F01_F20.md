@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `8630841`
+**Último commit:** `d636c29`
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -34,17 +34,17 @@ versionado de GitHub.
 | F-01 | Cerrada | alcance, decisiones y preguntas ORICA | documental | histórico | aprobada | ninguno técnico | Sí |
 | F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 191 local (190 no-UI + 1 UI) | CI exitoso | aprobada código | revisión manual voz/lógica/UI | No |
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
-| F-10 | Parcial | `55c887c`, evidencia de captura local | 191 local + 14 dirigidas voz | run `43766942377` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
+| F-10 | Parcial | `55c887c`, evidencia de captura local | 191 local + 14 dirigidas voz | run `43767273792` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
-| F-12 | Implementada | Qt + resumen de confirmación; smoke `Qt smoke UI OK` | Qt offscreen | run `43766942377` verde | pendiente manual | captura y tres fixtures | No |
-| F-13 | Implementada | estados textuales y alertas; smoke UI documentado | Qt/integración | run `43766942377` verde | parcial | ensayo visual manual | No |
+| F-12 | Implementada | Qt + resumen de confirmación; smoke `Qt smoke UI OK` | Qt offscreen | run `43767273792` verde | pendiente manual | captura y tres fixtures | No |
+| F-13 | Implementada | estados textuales y alertas; smoke UI documentado | Qt/integración | run `43767273792` verde | parcial | ensayo visual manual | No |
 | F-14 | Parcial | mensajes y fallback teclado | Qt offscreen | CI | pendiente | dos usuarios, ergonomía y TTS | No |
 | F-15 | Parcial | integración voz-parser-dominio-simulador-UI + escenarios offline | 191 local; V-12/V-13 | run `43763297246` verde | pendiente manual | recorrido voz de dos taladros | No |
-| F-16 | Parcial | diagnóstico, manifiesto y guía; `required_ok=true` en Windows 11/Python 3.12.10 | 191 + diagnóstico + manifest | run `43766942377` verde | pendiente manual | copia limpia sin red y reinicio | No |
-| F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado; V-12/V-13 | 191 local | run `43766942377` verde | `/root/demo_reviewer` aprobó escenarios | corpus y V-10 | No |
+| F-16 | Parcial | diagnóstico, manifiesto y guía; `required_ok=true` en Windows 11/Python 3.12.10 | 191 + diagnóstico + manifest | run `43767273792` verde | pendiente manual | copia limpia sin red y reinicio | No |
+| F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado; V-12/V-13 | 191 local | run `43767273792` verde | `/root/demo_reviewer` aprobó escenarios | corpus y V-10 | No |
 | F-18 | Pendiente externo | protocolo preparado | no ejecutada | — | pendiente | dos participantes no autores | No |
 | F-19 | Parcial | pitch, FAQ y fallback | documental | CI | pendiente | ensayo cronometrado y acta | No |
-| F-20 | Pendiente | manifiesto fail-closed y checklist | 191 local + manifest OK; V-12/V-13 | run `43766942377` verde | pendiente | paquete limpio, tag y cotejo cruzado | No |
+| F-20 | Pendiente | manifiesto fail-closed y checklist | 191 local + manifest OK; V-12/V-13 | run `43767273792` verde | pendiente | paquete limpio, tag y cotejo cruzado | No |
 
 ## Arquitectura y flujo
 
