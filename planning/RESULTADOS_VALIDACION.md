@@ -9,8 +9,9 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
 | Pruebas automatizadas exitosas | 190/190 | `.venv\Scripts\python.exe -m pytest -q` local |
-| CI Windows exitoso | 1/1 | run `43763663170`, tests + importación UI |
-| CI Windows del commit actual | 1/1 | run `43764847953`, tests + importación UI |
+| CI Windows exitoso | 1/1 | run `43766090956`, tests + importación UI |
+| CI Windows del commit actual | 1/1 | run `43766090956`, tests + importación UI |
+| CI Windows del commit documental más reciente | 1/1 | run `43766090956`, tests + importación UI |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
