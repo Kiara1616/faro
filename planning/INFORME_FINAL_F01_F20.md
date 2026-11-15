@@ -3,7 +3,8 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `f6b7885`
+**Último commit de código probado por CI:** `f6b7885`  
+**Documentación posterior:** consultar `git rev-parse HEAD` (cambios sin lógica).
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -48,9 +49,9 @@ La ejecución de una copia limpia reconstruida desde Git está documentada en
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
 |---|---|---|---|---|---|---|---|
 | F-01 | Cerrada | alcance, decisiones y preguntas ORICA | documental | histórico | aprobada | ninguno técnico | Sí |
-| F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 195 local (192 no-UI + 3 UI) | run `43772535508` verde | aprobada código | revisión manual voz/lógica/UI | No |
+| F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 195 local (192 no-UI + 3 UI) | run `43772535508` verde (commit probado `f6b7885`) | aprobada código | revisión manual voz/lógica/UI | No |
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
-| F-10 | Parcial | `55c887c`, evidencia de captura local | 195 local + 14 dirigidas voz | run `43772535508` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
+| F-10 | Parcial | `55c887c`, evidencia de captura local | 195 local + 14 dirigidas voz | run `43772535508` verde (commit probado `f6b7885`) | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
 | F-12 | Implementada | Qt + resumen de confirmación; contrato visual y smoke | Qt offscreen, 3 pruebas UI | run `43772535508` verde | `/root/ui_contract_reviewer` aprobó código | captura y tres fixtures | No |
 | F-13 | Implementada | estados textuales y alertas; contrato visual | Qt/integración, 3 pruebas UI | run `43772535508` verde | `/root/ui_contract_reviewer` aprobó código | ensayo visual manual | No |
