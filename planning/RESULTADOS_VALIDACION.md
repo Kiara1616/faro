@@ -1,6 +1,6 @@
 # Resultados de validación de Faro
 
-Fecha de corte: 2026-11-15 · versión: `69c36ef` · entorno local: Windows 11,
+Fecha de corte: 2026-11-15 · versión: `8630841` · entorno local: Windows 11,
 Python 3.12.10. Esta matriz valida únicamente el simulador ficticio; no es una
 certificación de seguridad ni una validación de maquinaria ORICA.
 
@@ -9,9 +9,9 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
 | Pruebas automatizadas exitosas | 191/191 | 190 no-UI + 1 UI offscreen, ejecutados aislados por estabilidad nativa Qt |
-| CI Windows exitoso | 1/1 | run `43766719490`, tests + importación UI |
-| CI Windows del commit actual | 1/1 | run `43766719490`, tests + importación UI |
-| CI Windows del commit documental más reciente | 1/1 | run `43766719490`, tests + importación UI |
+| CI Windows exitoso | 1/1 | run `43766942377`, tests + importación UI |
+| CI Windows del commit actual | 1/1 | run `43766942377`, tests + importación UI |
+| CI Windows del commit documental más reciente | 1/1 | run `43766942377`, tests + importación UI |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
