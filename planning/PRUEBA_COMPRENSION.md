@@ -51,5 +51,5 @@ errores, ayuda recibida, frase que la persona cree que ocurrió y estado real.
 
 | Versión | Cambio | Motivo | Repetición | Resultado |
 |---|---|---|---|---|
-| fc1575d | Protocolo preparado para la UI actual | F-18 | Pendiente | Pendiente |
+| 5b105c8 | Protocolo preparado para la UI actual | F-18 | Pendiente | Pendiente |
 

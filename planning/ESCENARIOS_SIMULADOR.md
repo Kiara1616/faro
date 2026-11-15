@@ -23,6 +23,6 @@ muestra el nombre del escenario junto al taladro y el registro incorpora el
 escenario en el motivo del evento. Un nombre desconocido vuelve a `normal`; no
 se acepta una configuración no validada.
 
-Verificación automatizada: `tests/test_scenarios.py`; suite actual: 158 pruebas
-(la prueba Qt puede omitirse localmente si PySide6 no está instalado).
+Verificación automatizada: `tests/test_scenarios.py`; suite actual: 195 pruebas
+(`.venv` con `QT_QPA_PLATFORM=offscreen`; la suite UI también pasa aislada).
 
