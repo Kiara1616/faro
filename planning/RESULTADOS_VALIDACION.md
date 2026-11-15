@@ -1,6 +1,6 @@
 # Resultados de validación de Faro
 
-Fecha de corte: 2026-11-15 · versión: `d4dad23` · entorno local: Windows 11,
+Fecha de corte: 2026-11-15 · versión: `96cdcc6` · entorno local: Windows 11,
 Python 3.12.10. Esta matriz valida únicamente el simulador ficticio; no es una
 certificación de seguridad ni una validación de maquinaria ORICA.
 
@@ -8,8 +8,8 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
-| Pruebas automatizadas exitosas | 172/172 | `.venv\Scripts\python.exe -m pytest -q` local |
-| CI Windows exitoso | 1/1 | run `43760720277`, tests + importación UI |
+| Pruebas automatizadas exitosas | 189/189 | `.venv\Scripts\python.exe -m pytest -q` local |
+| CI Windows exitoso | 1/1 | run `43763297246`, tests + importación UI |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
 | Fallos/cancelaciones que permiten cierre | 0 | `test_failed_or_cancelled_action_never_completes` |
