@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `fa90b78`  
+**Último commit:** `1a99565`  
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.

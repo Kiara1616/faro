@@ -1,6 +1,6 @@
 # Resultados de validación de Faro
 
-Fecha de corte: 2026-11-15 · versión: `054650c` · entorno local: Windows 11,
+Fecha de corte: 2026-11-15 · versión: `1a99565` · entorno local: Windows 11,
 Python 3.12.10. Esta matriz valida únicamente el simulador ficticio; no es una
 certificación de seguridad ni una validación de maquinaria ORICA.
 
