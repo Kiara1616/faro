@@ -138,6 +138,8 @@ def test_critical_action_waits_for_confirmation_and_cancel_never_submits(tmp_pat
         assert controller.process(text).decision.accepted
     result = controller.process("extender brazo", zone_clear=True)
     assert result.decision.accepted
+    assert controller.domain.state is State.CONFIRMACION_PENDIENTE
+    assert result.decision.state_after is State.CONFIRMACION_PENDIENTE
     assert controller.confirmation_pending
     assert controller.simulator.busy is False
     cancelled = controller.process("cancelar")
@@ -161,6 +163,69 @@ def test_confirmation_expires_without_execution(tmp_path):
     assert expired.decision is not None and not expired.decision.accepted
     assert expired.decision.reason == "confirmation_expired"
     assert controller.simulator.busy is False
+
+
+def test_duplicate_confirmation_is_single_use_and_audited(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "duplicate.sqlite3")
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    result = controller.process("extender brazo", zone_clear=True)
+    command_id = result.decision.command_id
+    confirm(controller)
+    duplicate = controller.process("confirmar")
+    assert duplicate.decision is not None and not duplicate.decision.accepted
+    assert duplicate.decision.reason == "no_confirmation_pending"
+    events = [row["event_status"] for row in controller.audit.list_records(command_id)]
+    assert events.count("confirmation_pending") == 1
+    assert events.count("confirmation_accepted") == 1
+
+
+def test_live_context_change_rejects_confirmation(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "context.sqlite3")
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    result = controller.process("extender brazo", zone_clear=True)
+    command_id = result.decision.command_id
+    controller.domain.selected_hole_id = "102"  # hostile/stale context simulation
+    rejected = controller.process("confirmar")
+    assert rejected.decision is not None and not rejected.decision.accepted
+    assert rejected.decision.reason == "confirmation_context_changed"
+    assert controller.simulator.busy is False
+    assert any(row["event_status"] == "confirmation_context_changed"
+               for row in controller.audit.list_records(command_id))
+
+
+def test_authorization_failure_fails_closed(tmp_path, monkeypatch):
+    controller = FaroController.create(PLAN, tmp_path / "authorize.sqlite3")
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    result = controller.process("extender brazo", zone_clear=True)
+    monkeypatch.setattr(controller.domain, "authorize_pending_action", lambda _: False)
+    rejected = controller.process("confirmar")
+    assert rejected.decision is not None and not rejected.decision.accepted
+    assert rejected.decision.reason == "confirmation_authorization_failed"
+    assert controller.simulator.busy is False
+
+
+def test_pause_during_confirmation_cancels_pending_without_simulator_request(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "pause-confirmation.sqlite3")
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    pending = controller.process("extender brazo", zone_clear=True)
+    command_id = pending.decision.command_id
+    paused = controller.process("pausar")
+    assert paused.decision is not None and paused.decision.accepted
+    assert paused.decision.reason == "confirmation_cancelled_by_pause"
+    assert controller.domain.state is State.PREPARADO
+    assert controller.domain.pending is None
+    assert controller.confirmation_pending is False
+    assert controller.simulator.busy is False
+    events = [row["event_status"] for row in controller.audit.list_records(command_id)]
+    assert "confirmation_cancelled" in events
 
 
 def test_controller_audit_includes_selected_scenario(tmp_path):

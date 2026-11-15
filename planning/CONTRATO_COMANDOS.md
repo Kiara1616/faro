@@ -29,7 +29,7 @@ Estados de tarea: `SIN_SELECCION`, `SELECCIONADO`, `CONSULTADO`, `PREPARADO`, `C
 | `extender_brazo` / «extender brazo» | Ninguno | `PREPARADO`, método brazo, datos validados, zona ficticia despejada | Solicitud al simulador; `POSICIONADO` solo tras `completed`. | Sí | Método distinto, zona ocupada, acción pendiente o estado incorrecto. |
 | `extender_manguera` / «extender manguera» | Ninguno | Igual, con método manguera | Igual. | Sí | Igual. |
 | `iniciar_carga` / «iniciar carga» | Ninguno | `POSICIONADO`, plan validado, sin alerta pendiente ni acción activa | Solicitud de carga simulada; `CARGADO` solo tras `completed`. | Sí | Datos divergentes o movimiento incompleto → no solicitar. |
-| `pausar` / «pausar» | Ninguno | Movimiento/carga/retracción en curso | Pide cancelación simulada; estado queda en revisión hasta evento de cancelación. | No | Sin acción activa → informar sin cambiar estado. |
+| `pausar` / «pausar» | Ninguno | Movimiento/carga/retracción en curso | Pide cancelación simulada; estado queda en revisión hasta evento de cancelación. Si hay `CONFIRMACION_PENDIENTE`, cancela esa confirmación local sin enviar cancelación al simulador. | No | Sin acción activa → informar sin cambiar estado. |
 | `retraer_brazo` / «retraer brazo» | Ninguno | `CARGADO`, método brazo, sin acción activa | Solicitud; `RETRAIDO` tras `completed`. | Sí | Método/estado incorrecto. |
 | `retraer_manguera` / «retraer manguera» | Ninguno | `CARGADO`, método manguera, sin acción activa | Igual. | Sí | Igual. |
 | `cerrar_taladro` / «cerrar taladro» | Ninguno | `RETRAIDO`, sin alerta pendiente ni acción activa | Marca `CERRADO`; audita cierre. | No | Retracción pendiente o fallo → no cerrar. |
@@ -75,13 +75,13 @@ Los IDs, «producto alfa» y «100 kilos» de ejemplo son ficticios. F-03 fijar�
 - [x] Negación, composición, valor/ID/estado dudoso y modo incompatible se rechazan sin acción.
 - [ ] Producto, voz, lógica e interfaz validan juntos la tabla antes de fijar código y frases. **Pendiente de revisión del equipo.**
 
-## Implementación preparatoria de F-22
+## Implementación integrada de F-22
 
-`faro/confirmation.py` contiene una compuerta determinista independiente para
-el prototipo: liga token, sesión, modo, taladro, acción, producto, kg y hora de
-vencimiento (10 s por defecto). Sus pruebas cubren cambio de contexto,
-expiración, cancelación y confirmación de un solo uso. La compuerta todavía no
-se activa automáticamente en todas las acciones de `FaroDomain`; esa política
-debe confirmarse con producto/ORICA antes de cambiar el flujo normal. Por ello
-no se debe afirmar que F-22 está cerrado hasta integrar la compuerta con la UI,
-el parser y el controlador.
+`faro/confirmation.py` contiene una compuerta determinista integrada por
+`FaroController` y `VoicePipeline`: liga token, sesión, modo, taladro, acción,
+producto, kg y hora de vencimiento (10 s por defecto). Las acciones críticas no
+llegan al simulador hasta confirmar; cancelar, expirar, cambiar contexto,
+duplicar o fallar la autorización se rechazan sin envío. La UI muestra el
+resumen pendiente y ofrece confirmar/cancelar. La evidencia de voz humana,
+usuarios y operación minera sigue siendo pendiente y no se interpreta como
+validación industrial.

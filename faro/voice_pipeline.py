@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from faro.domain import Command, Decision, FaroDomain, Source
+from faro.domain import Command, Decision, FaroDomain, Intent, Source
 from faro.parser import ParseResult, parse_command
 from faro.plan import DemoPlan
 
@@ -40,6 +40,10 @@ class VoicePipeline:
                                source=source, generation=generation)
             return PipelineResult(transcript, parsed, decision)
         command: Command = parsed.command
+        if command.intent is Intent.PAUSAR and self.control_handler is not None:
+            decision = self.control_handler("pausar", session_id=session_id,
+                                            source=source, generation=generation)
+            return PipelineResult(transcript, parsed, decision)
         # The fictional sensor signal must come from the coordinator/simulator,
         # never from spoken text. Other commands retain their default.
         if command.intent.value in {"extender_brazo", "extender_manguera"}:

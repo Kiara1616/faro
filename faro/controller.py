@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import time
 from pathlib import Path
 
 from faro.audit import AuditStore
 from faro.confirmation import ConfirmationGate
-from faro.domain import EventStatus, FaroDomain, Mode, Source, State
+from faro.domain import Command, EventStatus, FaroDomain, Intent, Mode, Source, State
 from faro.plan import DemoPlan
 from faro.simulator import SimEvent, SimStatus, SimulatedMMU
 from faro.scenarios import Scenario, build_simulator
@@ -69,45 +69,81 @@ class FaroController:
         from faro.domain import Decision
         return Decision(accepted, reason, command_id, before, after or before, None)
 
+    def _live_confirmation_context(self, request):
+        session = self.domain.session
+        hole = self.domain.selected_hole
+        action = request.action
+        product = hole.product if action == "iniciar_carga" and hole else None
+        planned_kg = hole.planned_kg if action == "iniciar_carga" and hole else None
+        return {
+            "session_id": session.session_id if session else "",
+            "mode": session.mode.value if session else "",
+            "hole_id": hole.id if hole else "",
+            "action": action,
+            "product": product,
+            "planned_kg": planned_kg,
+        }
+
     def _handle_control(self, intent: str, *, session_id: str, source: Source,
                         generation: int | None = None):
         if intent in {"modo_manual", "modo_voz"}:
             return self.domain.handle_control(intent, session_id=session_id,
                                               source=source, generation=generation)
+        if intent == "pausar" and not self.confirmation_pending:
+            return self.domain.handle_input(Command(Intent.PAUSAR), source=source,
+                                            session_id=session_id, generation=generation)
         before = self.domain.state
         control_id = f"control-{time.monotonic_ns()}"
         pending = self.confirmation_gate.pending
+        pause_cancelled_confirmation = intent == "pausar" and self.confirmation_pending
+        if pause_cancelled_confirmation:
+            # A request waiting for authorization has never reached the
+            # simulator; pausing it must not create a cancellation command for
+            # an action that does not exist there yet.
+            intent = "cancelar_confirmacion"
         if intent == "cancelar_confirmacion":
             if pending is None or self._confirmation_request is None:
                 return self._control_decision(False, "no_confirmation_pending", control_id, before)
             request = self._confirmation_request
             restored = self.domain.cancel_pending_confirmation(request.command_id,
                                                                self._confirmation_state_before)
+            if not restored:
+                return self._control_decision(False, "confirmation_cancel_failed", control_id, before)
             self.confirmation_gate.cancel()
             self._confirmation_request = None
             self._confirmation_state_before = None
-            if not restored:
-                return self._control_decision(False, "confirmation_cancel_failed", control_id, before)
-            self.audit.record_event(request.command_id, "confirmation_cancelled", "cancelled_by_operator")
-            return self._control_decision(True, "confirmation_cancelled", control_id, before)
+            reason = ("confirmation_cancelled_by_pause" if pause_cancelled_confirmation
+                      else "confirmation_cancelled")
+            self.audit.record_event(request.command_id, "confirmation_cancelled", reason)
+            return self._control_decision(True, reason, control_id, before)
         if intent == "confirmar":
             if pending is None or self._confirmation_request is None:
                 return self._control_decision(False, "no_confirmation_pending", control_id, before)
-            session = self.domain.session
+            request = self._confirmation_request
+            live = self._live_confirmation_context(request)
             accepted, reason = self.confirmation_gate.confirm(
                 token=pending.token, session_id=session_id,
-                mode=session.mode.value if session else "", hole_id=pending.hole_id,
-                action=pending.action, product=pending.product,
-                planned_kg=pending.planned_kg, now=time.monotonic())
-            request = self._confirmation_request
+                mode=live["mode"], hole_id=live["hole_id"],
+                action=live["action"], product=live["product"],
+                planned_kg=live["planned_kg"], now=time.monotonic())
             state_before = self._confirmation_state_before
             if not accepted:
                 self.domain.cancel_pending_confirmation(request.command_id, state_before)
                 self._confirmation_request = None
                 self._confirmation_state_before = None
-                self.audit.record_event(request.command_id, f"confirmation_{reason}", reason)
+                event_status = reason if reason.startswith("confirmation_") else f"confirmation_{reason}"
+                self.audit.record_event(request.command_id, event_status, reason)
                 return self._control_decision(False, reason, control_id, before)
-            self.domain.authorize_pending_action(request.command_id)
+            authorized = self.domain.authorize_pending_action(request.command_id)
+            if not authorized:
+                self.domain.cancel_pending_confirmation(request.command_id, state_before)
+                self._confirmation_request = None
+                self._confirmation_state_before = None
+                self.audit.record_event(request.command_id,
+                                        "confirmation_authorization_failed",
+                                        "domain_authorization_failed")
+                return self._control_decision(False, "confirmation_authorization_failed",
+                                              control_id, before)
             event = self.simulator.submit(request)
             self._confirmation_request = None
             self._confirmation_state_before = None
@@ -129,6 +165,14 @@ class FaroController:
         decision = result.decision
         if decision is None:
             return result
+        if (decision.request is not None and decision.accepted
+                and decision.request.action in self.CONFIRMATION_ACTIONS):
+            # The low-level domain validates the request; the composition root
+            # owns the authorization boundary and exposes the explicit pending
+            # state until the operator confirms or cancels it.
+            self.domain.state = State.CONFIRMACION_PENDIENTE
+            decision = replace(decision, state_after=State.CONFIRMACION_PENDIENTE)
+            result = replace(result, decision=decision)
         self.audit.record_decision(
             command_id=decision.command_id, session_id=self.session_id,
             operator_label=self.domain.session.operator_label if self.domain.session else None,

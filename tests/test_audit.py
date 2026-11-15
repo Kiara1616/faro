@@ -22,8 +22,8 @@ def test_decision_and_event_survive_restart_without_audio(tmp_path):
     store.record_event(command_id, "completed", "simulator_completed")
     reopened = AuditStore(path)
     rows = reopened.list_records(command_id)
-    assert len(rows) == 1
-    row = rows[0]
+    assert len(rows) == 3
+    row = rows[-1]
     assert row["session_id"] == "session-1"
     assert row["operator_label"] == "operador de prueba"
     assert row["event_status"] == "completed"

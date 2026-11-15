@@ -64,7 +64,7 @@ class AuditStore:
             )
             db.execute("CREATE INDEX IF NOT EXISTS idx_audit_command ON audit_records(command_id, id)")
             self._migrate_legacy(db)
-            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('audit_schema','2')")
+            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('audit_schema','3')")
 
     def _connect(self) -> sqlite3.Connection:
         db = sqlite3.connect(self.path)
@@ -114,14 +114,23 @@ class AuditStore:
 
     def record_event(self, command_id: str, status: str, reason: str = "", timestamp: str | None = None) -> int:
         with self._connect() as db:
-            cursor = db.execute(
-                """UPDATE audit_records SET event_status=?, reason=?, timestamp=?
-                   WHERE id=(SELECT id FROM audit_records WHERE command_id=? ORDER BY id DESC LIMIT 1)""",
-                (status, reason, timestamp or _now(), command_id),
-            )
-            if cursor.rowcount == 0:
+            source = db.execute(
+                """SELECT session_id, operator_label, source, transcript, intent, hole_id,
+                          state_before, state_after, accepted, decision
+                   FROM audit_records WHERE command_id=? ORDER BY id DESC LIMIT 1""",
+                (command_id,),
+            ).fetchone()
+            if source is None:
                 raise KeyError(f"Unknown command_id: {command_id}")
-            return int(cursor.rowcount)
+            db.execute(
+                """INSERT INTO audit_records
+                   (timestamp,command_id,session_id,operator_label,source,transcript,intent,hole_id,
+                    state_before,state_after,accepted,decision,reason,event_status)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (timestamp or _now(), command_id, source[0], source[1], source[2], source[3],
+                 source[4], source[5], source[6], source[7], source[8], source[9], reason, status),
+            )
+            return 1
 
     def list_records(self, command_id: str | None = None) -> list[dict[str, Any]]:
         with self._connect() as db:

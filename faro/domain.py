@@ -18,6 +18,7 @@ class State(str, Enum):
     SELECCIONADO = "seleccionado"
     CONSULTADO = "consultado"
     PREPARADO = "preparado"
+    CONFIRMACION_PENDIENTE = "confirmacion_pendiente"
     MOVIMIENTO_EN_CURSO = "movimiento_en_curso"
     POSICIONADO = "posicionado"
     CARGA_EN_CURSO = "carga_en_curso"

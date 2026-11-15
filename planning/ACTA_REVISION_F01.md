@@ -8,7 +8,7 @@ Estado: revisión técnica preliminar; pendiente de validación por una segunda 
 
 | ID | Hallazgo | Acción | Estado |
 |---|---|---|---|
-| R-01 | `ALCANCE_Y_DECISIONES.md` presentaba la confirmación como parte del flujo, aunque F-22 aún no la integra en dominio/UI. | Se cambió a «confirmación conceptual», se enlazó explícitamente F-22 y se aclaró el caso normal. | Corregido |
+| R-01 | `ALCANCE_Y_DECISIONES.md` debía distinguir confirmación integrada del simulador y autorización industrial. | Se documentó el estado pendiente, la compuerta local y el límite explícito de no conexión con equipos reales. | Corregido |
 | R-02 | El documento podía interpretarse como aprobación técnica de ORICA. | Se mantienen etiquetas de hipótesis, simulación y preguntas pendientes; no se atribuye aprobación. | Verificado |
 | R-03 | Las preguntas Q-01..Q-07 no tienen respuesta acreditada en el repositorio. | Se conserva dueño, efecto y contingencia; no se marca ninguna como respondida. | Pendiente comité |
 
@@ -28,5 +28,5 @@ nombre/fecha, observaciones y aceptación o correcciones.
 
 | Segundo revisor | Fecha | Resultado | Observaciones |
 |---|---|---|---|
-| `f01_review_final` (agente revisor independiente) | 2026-11-06 | Aprobado técnicamente | Confirmó correcciones de D-04 y fecha de preguntas; no encontró contradicciones pendientes. F-22 sigue identificado como integración futura. |
+| `f01_review_final` (agente revisor independiente) | 2026-11-06 | Aprobado técnicamente | Confirmó correcciones de D-04 y fecha de preguntas; no encontró contradicciones pendientes. F-22 se integró posteriormente en el controlador y UI, con revisión independiente adicional. |
 
