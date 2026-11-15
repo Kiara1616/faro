@@ -14,6 +14,11 @@
   de un fallo terminado permite un reintento explícito.
 - Un watchdog configurable detecta que el stream dejó de entregar fragmentos;
   el error detiene el consumo y cierra el recurso.
+- La apertura del dispositivo se serializa con la solicitud de parada: si la
+  parada llega durante el constructor del stream, este se cierra sin emitir
+  `listening`.
+- Los callbacks de estado también llevan la generación y la UI descarta
+  estados tardíos de una captura anterior.
 - `app.py` conserva el mensaje de error tras el callback final `stopped`, para
   no mostrar una escucha aparentemente activa o un cierre ambiguo.
 
