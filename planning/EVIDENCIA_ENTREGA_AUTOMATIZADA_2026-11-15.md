@@ -2,8 +2,7 @@
 
 Fecha de ejecución: 2026-11-15  
 Commit verificado por esta evidencia: `1fb948d`  
-HEAD posterior (documentación/CI): `8731aac`; no se presenta un run nuevo como
-si existiera para esos commits.
+CI Windows actual: `f6b7885`, run `43772535508`, concluido exitosamente.
 Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 ## Resultados
@@ -15,7 +14,7 @@ Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 | Escenario de fallo | `fallo_brazo`, estado `fallo`, 1 terminal `failed`, 0 taladros completados |
 | Diagnóstico offline | `required_ok=true`; plan, modelo, PySide6, pytest, Vosk, sounddevice y micrófonos detectados |
 | Manifiesto | regenerado para el contenido actual y `--verify` devuelve `OK` |
-| CI Qt Windows | run `43770211428` verde; 3 pruebas UI aisladas y guard de teardown de `QApplication` |
+| CI Qt Windows | run `43772535508` verde; 3 pruebas UI aisladas y guard de teardown de `QApplication` |
 
 ## Incidencia detectada durante la verificación
 
