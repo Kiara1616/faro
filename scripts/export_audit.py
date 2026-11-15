@@ -9,7 +9,7 @@ from pathlib import Path
 from faro.audit import AuditStore
 
 
-def export_audit(database: str | Path, output: str | Path, *, redact: bool = False) -> int:
+def export_audit(database: str | Path, output: str | Path, *, redact: bool = True) -> int:
     database = Path(database)
     if not database.is_file():
         raise FileNotFoundError(f"No existe la bitácora SQLite: {database}")
@@ -33,9 +33,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Exporta auditoría ficticia sin audio.")
     parser.add_argument("database", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument("--redact", action="store_true")
+    parser.add_argument("--unredacted", action="store_true",
+                        help="Solo para revisión local; no usar en la carpeta entregable.")
     args = parser.parse_args()
-    count = export_audit(args.database, args.output, redact=args.redact)
+    count = export_audit(args.database, args.output, redact=not args.unredacted)
     print(f"Exportados {count} registros ficticios; audio_included=false")
     return 0
 

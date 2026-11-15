@@ -46,3 +46,13 @@ def test_manifest_covers_source_tree_and_detects_tamper(tmp_path):
     path.write_text(json.dumps(manifest), encoding="utf-8")
     (source / "controller.py").write_text("tampered", encoding="utf-8")
     assert "faro/controller.py" in verify_manifest(tmp_path, path)
+
+
+@pytest.mark.parametrize("relative", ["fixtures/person.wav", "private/secret.txt"])
+def test_manifest_rejects_private_or_audio_material(tmp_path, relative):
+    prepare(tmp_path)
+    path = tmp_path / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("private", encoding="utf-8")
+    with pytest.raises(ValueError):
+        build_manifest(tmp_path)

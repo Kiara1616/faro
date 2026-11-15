@@ -13,6 +13,22 @@ REQUIRED = (
     "requirements.txt", "requirements-voice.txt", "scripts/setup_voice_model.py",
     "scripts/diagnose_offline.py", "scripts/package_manifest.py",
 )
+FORBIDDEN_SUFFIXES = {".wav", ".mp3", ".mp4", ".sqlite", ".sqlite3", ".log"}
+FORBIDDEN_DIRS = {"private", "briefing", "recordings", "audio"}
+
+
+def validate_package_clean(root: Path) -> None:
+    """Fail closed if a delivery tree contains private or disposable material."""
+    ignored = {".git", ".venv", "__pycache__", ".pytest_cache", "work", "build", "dist"}
+    for path in root.rglob("*"):
+        relative = path.relative_to(root)
+        if any(part in ignored for part in relative.parts):
+            continue
+        if path.is_dir() and path.name.casefold() in FORBIDDEN_DIRS:
+            raise ValueError(f"Forbidden delivery directory: {relative}")
+        if path.is_file() and (path.suffix.casefold() in FORBIDDEN_SUFFIXES
+                               or any(part.casefold() in FORBIDDEN_DIRS for part in relative.parts)):
+            raise ValueError(f"Forbidden delivery file: {relative}")
 
 
 def package_files(root: Path) -> list[str]:
@@ -40,6 +56,7 @@ def digest(path: Path) -> str:
 
 def build_manifest(root: str | Path) -> dict[str, object]:
     root = Path(root)
+    validate_package_clean(root)
     missing = [item for item in REQUIRED if not (root / item).is_file()]
     if missing:
         raise FileNotFoundError("Missing required package files: " + ", ".join(missing))

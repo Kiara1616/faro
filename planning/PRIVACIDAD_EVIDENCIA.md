@@ -15,9 +15,12 @@
 Para generar una copia anonimizada y limpiar artefactos de ensayo:
 
 ```powershell
-python scripts/export_audit.py data/faro-audit.sqlite3 work/auditoria-ficticia.json --redact
+python scripts/export_audit.py data/faro-audit.sqlite3 work/auditoria-ficticia.json
 python scripts/clean_evidence.py work/evidencia
 ```
+
+La redacción es predeterminada. `--unredacted` queda reservado para revisión
+local y no debe usarse en una carpeta entregable.
 
 El archivo de briefing se conserva solo para trabajo interno y no forma parte
 del paquete presentable; la carpeta de entrega se verifica mediante el
