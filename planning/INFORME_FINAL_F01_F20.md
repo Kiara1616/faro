@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `88166a9`
+**Último commit:** `94dfa9e`
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -22,6 +22,9 @@ manifiesto detectado y corregido) está en
 
 El inventario de responsables y criterios de cierre para las pruebas todavía
 manuales está en `planning/REGISTRO_PENDIENTES_MANUALES.md`.
+
+La instantánea del estado remoto de F-01 a F-20, consultada directamente en
+GitHub, está en `planning/AUDITORIA_ESTADO_ISSUES_2026-11-15.md`.
 
 La preparación y transferencia offline del modelo Vosk están especificadas en
 `planning/MODELO_VOSK_OFFLINE.md`; `models/` no se presenta como contenido
