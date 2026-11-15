@@ -1,7 +1,9 @@
 # Evidencia automatizada de entrega
 
 Fecha de ejecución: 2026-11-15  
-Commit de código/documentación: `1fb948d`
+Commit verificado por esta evidencia: `1fb948d`  
+HEAD posterior (documentación/CI): `8731aac`; no se presenta un run nuevo como
+si existiera para esos commits.
 Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 ## Resultados
