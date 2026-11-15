@@ -12,7 +12,7 @@ un simulador local; no afirma conexión con maquinaria ORICA ni ahorros medidos.
 | 1:20–2:40 | Flujo normal: seleccionar 101, consultar, preparar, declarar producto/masa, extender brazo con zona libre, completar carga, retraer y cerrar. | UI por taladro; estados reconocido/aceptado/en ejecución/completado. |
 | 2:40–3:30 | Caso de seguridad: declarar producto o kg incorrectos y repetir una orden. Faro rechaza, no envía al simulador y registra el motivo. | Alerta visible y `RESULTADOS_VALIDACION.md` V-03/V-05. |
 | 3:30–4:10 | Tecnología: Vosk local para ASR, parser cerrado, dominio determinista, adaptador MMU simulado y SQLite sin audio. | Diagrama de arquitectura y bitácora local. |
-| 4:10–4:40 | Métricas: 189 pruebas locales, cero rechazos que avancen; CI Windows y corpus humano se reportan solo cuando exista evidencia. | Resultado de CI y matriz de validación. |
+| 4:10–4:40 | Métricas: 190 pruebas locales, escenarios normal/fallo reproducibles offline y cero rechazos que avancen; CI Windows y corpus humano se reportan solo cuando exista evidencia. | Resultado de CI y matriz de validación. |
 | 4:40–5:00 | Ruta de piloto: ORICA define equipo, órdenes y señales; luego se valida en entorno aislado antes de cualquier integración. | Preguntas abiertas y límites del prototipo. |
 
 ## Respaldo si falla el micrófono

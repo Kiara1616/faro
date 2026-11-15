@@ -1,6 +1,6 @@
 # Resultados de validación de Faro
 
-Fecha de corte: 2026-11-15 · versión: `70141d9` · entorno local: Windows 11,
+Fecha de corte: 2026-11-15 · versión: `pendiente de commit` · entorno local: Windows 11,
 Python 3.12.10. Esta matriz valida únicamente el simulador ficticio; no es una
 certificación de seguridad ni una validación de maquinaria ORICA.
 
@@ -8,7 +8,7 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 
 | Métrica | Resultado | Denominador / evidencia |
 |---|---:|---|
-| Pruebas automatizadas exitosas | 189/189 | `.venv\Scripts\python.exe -m pytest -q` local |
+| Pruebas automatizadas exitosas | 190/190 | `.venv\Scripts\python.exe -m pytest -q` local |
 | CI Windows exitoso | 1/1 | run `43763663170`, tests + importación UI |
 | Órdenes rechazadas que llegan al simulador | 0 | `test_rejected_order_never_reaches_simulator_or_marks_success` |
 | Eventos con ID ajeno que completan una acción | 0 | `test_duplicate_wrong_id_and_busy_requests_do_not_complete` |
@@ -30,6 +30,8 @@ certificación de seguridad ni una validación de maquinaria ORICA.
 | V-09 | ASR desconocido, negación o ambigüedad | No crear comando ni solicitud | Cumple | P0/P1 | `tests/test_parser.py`, `tests/test_voice_pipeline.py` |
 | V-10 | Pérdida de micrófono/modelo | Mensaje de error; texto sigue disponible | Parcial | Manual en laptop | `faro/voice.py`, `scripts/diagnose_offline.py` |
 | V-11 | Reinicio y auditoría | Conservar decisiones/eventos, no audio | Cumple | P1 | `tests/test_audit.py`, `tests/test_controller.py` |
+| V-12 | Escenario normal de dos taladros | Cerrar 101 y 102 con eventos terminales completados | Cumple | P0/P1 | `scripts/verify_demo_scenarios.py --json`, sin red/hardware |
+| V-13 | Fallo de brazo inyectado | Entrar en `fallo`, no marcar taladro como completado | Cumple | P0 | `scripts/verify_demo_scenarios.py --json`, sin red/hardware |
 
 ## Métricas de voz
 
@@ -49,4 +51,5 @@ mezclarlos con audio sintético.
 - [ ] Ejecutar V-10 y el corpus humano autorizado en la laptop de demostración.
 - [ ] Revisión cruzada por una segunda persona y adjuntar JSON del diagnóstico offline.
 - [x] Confirmación crítica, expiración, cancelación, contexto y generación de voz obsoleta probados en controlador.
+- [x] Escenarios deterministas normal/fallo reproducibles offline y separados de evidencia humana.
 

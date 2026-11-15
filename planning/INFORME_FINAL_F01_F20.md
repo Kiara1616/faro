@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `70141d9`  
+**Último commit:** `pendiente de commit`  
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -17,19 +17,19 @@ independiente y, cuando el criterio lo exige, evidencia manual registrada.
 | Issue | Estado | Commit / evidencia | Pruebas | CI | Revisión independiente | Pendientes | Cerrada |
 |---|---|---|---|---|---|---|---|
 | F-01 | Cerrada | alcance, decisiones y preguntas ORICA | documental | histórico | aprobada | ninguno técnico | Sí |
-| F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 189 local | CI exitoso | aprobada código | revisión manual voz/lógica/UI | No |
+| F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 190 local | CI exitoso | aprobada código | revisión manual voz/lógica/UI | No |
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
 | F-10 | Parcial | `55c887c`, evidencia de captura local | 179 local + 14 dirigidas voz | run `43761928495` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
 | F-12 | Implementada | Qt + resumen de confirmación | Qt offscreen | run `43760720277` verde | pendiente manual | captura y tres fixtures | No |
 | F-13 | Implementada | estados textuales y alertas | Qt/integración | CI | parcial | ensayo visual manual | No |
 | F-14 | Parcial | mensajes y fallback teclado | Qt offscreen | CI | pendiente | dos usuarios, ergonomía y TTS | No |
-| F-15 | Parcial | integración voz-parser-dominio-simulador-UI | 189 local | run `43763297246` verde | pendiente manual | recorrido voz de dos taladros | No |
+| F-15 | Parcial | integración voz-parser-dominio-simulador-UI + escenarios offline | 190 local; V-12/V-13 | run `43763297246` verde | pendiente manual | recorrido voz de dos taladros | No |
 | F-16 | Parcial | diagnóstico, manifiesto y guía | suite + diagnóstico | CI | pendiente | copia limpia sin red y reinicio | No |
 | F-17 | Parcial | `RESULTADOS_VALIDACION.md` actualizado | matriz automatizada | CI | pendiente | corpus y V-10 | No |
 | F-18 | Pendiente externo | protocolo preparado | no ejecutada | — | pendiente | dos participantes no autores | No |
 | F-19 | Parcial | pitch, FAQ y fallback | documental | CI | pendiente | ensayo cronometrado y acta | No |
-| F-20 | Pendiente | manifiesto fail-closed y checklist | 189 local + manifest OK | run `43763663170` verde | pendiente | paquete limpio, tag y cotejo cruzado | No |
+| F-20 | Pendiente | manifiesto fail-closed y checklist | 190 local + manifest OK; V-12/V-13 | run `43763663170` verde | pendiente | paquete limpio, tag y cotejo cruzado | No |
 
 ## Arquitectura y flujo
 
@@ -69,6 +69,7 @@ python -m py_compile app.py
 .venv\Scripts\python.exe scripts\diagnose_offline.py --json
 .venv\Scripts\python.exe scripts\package_manifest.py . work\manifest.json
 .venv\Scripts\python.exe scripts\package_manifest.py . work\manifest.json --verify
+.venv\Scripts\python.exe scripts\verify_demo_scenarios.py --json
 ```
 
 ## Preguntas pendientes para ORICA
