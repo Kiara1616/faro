@@ -3,7 +3,7 @@
 **Corte:** 2026-11-15  
 **Repositorio:** `Kiara1616/faro`  
 **Rama:** `main`  
-**Último commit:** `d4dad23`  
+**Último commit:** `55c887c`  
 **Alcance:** simulador local académico; sin conexión a maquinaria, PLC, MMU,
 LOADPlus, ProBlast, LoRa, radio industrial, sensores reales ni sistemas de
 iniciación.
@@ -19,7 +19,7 @@ independiente y, cuando el criterio lo exige, evidencia manual registrada.
 | F-01 | Cerrada | alcance, decisiones y preguntas ORICA | documental | histórico | aprobada | ninguno técnico | Sí |
 | F-02 | Implementada | `7cfad46`, contrato y comentarios GitHub | 173 local | CI exitoso previo | aprobada código | revisión manual voz/lógica/UI | No |
 | F-03–F-09 | Cerradas | fixtures, dominio, simulador, excepciones, sesión, auditoría y parser | suite | CI | aprobadas | ninguno técnico | Sí |
-| F-10 | Parcial | `44377ca`, evidencia de captura local | suite + smoke sin frase | CI exitoso | técnica | frase hablada y pérdida de micrófono | No |
+| F-10 | Parcial | `55c887c`, evidencia de captura local | 179 local + 14 dirigidas voz | run `43761928495` verde | aprobada código por voz/QA | frase hablada y ruido/EPP | No |
 | F-11 | Pendiente externo | evaluador listo | tests evaluador | CI | pendiente | dos voces consentidas, ruido, p50/p95 | No |
 | F-12 | Implementada | Qt + resumen de confirmación | Qt offscreen | run `43760720277` verde | pendiente manual | captura y tres fixtures | No |
 | F-13 | Implementada | estados textuales y alertas | Qt/integración | CI | parcial | ensayo visual manual | No |
