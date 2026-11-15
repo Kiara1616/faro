@@ -1,7 +1,7 @@
 # Evidencia automatizada de entrega
 
 Fecha de ejecución: 2026-11-15  
-Commit de código/documentación: `69c36ef`
+Commit de código/documentación: `1fb948d`
 Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 ## Resultados
@@ -13,7 +13,7 @@ Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 | Escenario de fallo | `fallo_brazo`, estado `fallo`, 1 terminal `failed`, 0 taladros completados |
 | Diagnóstico offline | `required_ok=true`; plan, modelo, PySide6, pytest, Vosk, sounddevice y micrófonos detectados |
 | Manifiesto | regenerado para el contenido actual y `--verify` devuelve `OK` |
-| CI Qt Windows | run `43768610935` verde tras corregir teardown de `QApplication` |
+| CI Qt Windows | run `43770211428` verde; 3 pruebas UI aisladas y guard de teardown de `QApplication` |
 
 ## Incidencia detectada durante la verificación
 
