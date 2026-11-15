@@ -9,11 +9,13 @@ from __future__ import annotations
 import json
 import queue
 import threading
+import time
 from pathlib import Path
 from typing import Callable
 
 
 ResultCallback = Callable[[str], None]
+ContextResultCallback = Callable[[str, int | None], None]
 StatusCallback = Callable[[str, str], None]
 
 
@@ -30,9 +32,14 @@ class VoiceRecognizer:
         sample_rate: int = 16_000,
         block_size: int = 4_000,
         grammar: list[str] | None = None,
+        capture_generation: int | None = None,
+        on_result_context: ContextResultCallback | None = None,
+        audio_timeout_seconds: float = 5.0,
     ) -> None:
         if sample_rate <= 0 or block_size <= 0:
             raise ValueError("sample_rate and block_size must be positive")
+        if audio_timeout_seconds <= 0:
+            raise ValueError("audio_timeout_seconds must be positive")
         self.model_path = Path(model_path)
         self.on_result = on_result
         self.on_status = on_status
@@ -40,6 +47,9 @@ class VoiceRecognizer:
         self.sample_rate = sample_rate
         self.block_size = block_size
         self.grammar = grammar
+        self.capture_generation = capture_generation
+        self.on_result_context = on_result_context
+        self.audio_timeout_seconds = float(audio_timeout_seconds)
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
@@ -105,12 +115,18 @@ class VoiceRecognizer:
             except Exception:
                 pass  # A UI callback must not kill the audio worker.
 
-    def _emit_result(self, text: str) -> None:
+    def _emit_result(self, text: str, generation: int | None = None) -> None:
         text = text.strip()
         if text:
             try:
-                self.on_result(text)
+                if self.on_result_context is not None:
+                    self.on_result_context(text, generation)
+                else:
+                    self.on_result(text)
             except Exception:
+                # A UI/application callback failure must fail closed: stop
+                # consuming audio and let the worker close the stream.
+                self._stop.set()
                 self._emit_status("error", "Falló el procesamiento de la transcripción.")
 
     def _run(self) -> None:
@@ -129,13 +145,21 @@ class VoiceRecognizer:
             else:
                 recognizer = KaldiRecognizer(model, self.sample_rate)
 
+            # stop() may have been called while the local model was loading;
+            # never open a capture device after cancellation was requested.
+            if self._stop.is_set():
+                return
+
             chunks: queue.Queue[bytes] = queue.Queue(maxsize=16)
             overflow_reported = False
+            capture_generation = self.capture_generation
+            last_audio_at = time.monotonic()
 
             def audio_callback(indata: bytes, frames: int, time_info: object, status: object) -> None:
-                nonlocal overflow_reported
+                nonlocal overflow_reported, last_audio_at
                 if self._stop.is_set():
                     return
+                last_audio_at = time.monotonic()
                 if status and not overflow_reported:
                     overflow_reported = True
                     self._emit_status("warning", f"La captura de audio reportó: {status}")
@@ -165,10 +189,12 @@ class VoiceRecognizer:
                     try:
                         chunk = chunks.get(timeout=0.1)
                     except queue.Empty:
+                        if time.monotonic() - last_audio_at >= self.audio_timeout_seconds:
+                            raise RuntimeError("No se reciben datos del micrófono; revise el dispositivo.")
                         continue
                     if recognizer.AcceptWaveform(chunk):
                         result = json.loads(recognizer.Result())
-                        self._emit_result(str(result.get("text", "")))
+                        self._emit_result(str(result.get("text", "")), capture_generation)
         except ImportError as exc:
             self._emit_status("error", f"Falta una dependencia de voz: {exc}. Instale requirements-voice.txt.")
         except Exception as exc:

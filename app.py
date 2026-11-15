@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent
 class VoiceEvents(QObject):
     """Move worker-thread voice callbacks onto Qt's GUI thread."""
 
-    result = Signal(str)
+    result = Signal(str, object)
     status = Signal(str, str)
 
 
@@ -46,7 +46,8 @@ def main() -> int:
     model_path = Path(os.environ.get("FARO_VOSK_MODEL", str(ROOT / "models" / "vosk-model-small-es-0.42")))
     raw_device = os.environ.get("FARO_AUDIO_DEVICE")
     audio_device = int(raw_device) if raw_device and raw_device.isdecimal() else raw_device
-    voice = VoiceRecognizer(model_path, events.result.emit, events.status.emit, device=audio_device)
+    voice = VoiceRecognizer(model_path, lambda text: None, events.status.emit,
+                            device=audio_device, on_result_context=events.result.emit)
     ui_state = {
         "listening": False,
         "transcript": "",
@@ -77,9 +78,10 @@ def main() -> int:
     def render() -> None:
         window.render_state({**snapshot(), **ui_state})
 
-    def handle_command(text: str, source: str = "text") -> None:
+    def handle_command(text: str, source: str = "text", generation: int | None = None) -> None:
         input_source = Source.VOICE if source == "voice" else Source.TEXT
-        generation = domain.session.generation if input_source is Source.VOICE else None
+        if input_source is Source.VOICE and generation is None:
+            generation = domain.session.generation if domain.session else None
         result = controller.process(text, source=input_source, generation=generation,
                                     zone_clear=False)
         ui_state["transcript"] = text
@@ -118,12 +120,14 @@ def main() -> int:
         if activate:
             if not domain.set_mode(session_id, Mode.VOZ) or not domain.set_listening(session_id, True):
                 ui_state["voice_status"] = "No se puede activar voz durante una acción o sesión inválida."
-            elif voice.start():
-                ui_state["voice_status"] = "Iniciando micrófono…"
             else:
-                domain.set_listening(session_id, False)
-                domain.set_mode(session_id, Mode.MANUAL)
-                ui_state["voice_status"] = "El micrófono ya está iniciándose."
+                voice.capture_generation = domain.session.generation if domain.session else None
+                if voice.start():
+                    ui_state["voice_status"] = "Iniciando micrófono…"
+                else:
+                    domain.set_listening(session_id, False)
+                    domain.set_mode(session_id, Mode.MANUAL)
+                    ui_state["voice_status"] = "El micrófono ya está iniciándose."
         else:
             voice.stop(timeout=0.5)
             domain.set_listening(session_id, False)
@@ -141,7 +145,8 @@ def main() -> int:
     window.command_submitted.connect(handle_command)
     window.listening_toggled.connect(toggle_voice)
     window.recovery_requested.connect(recover_unknown)
-    events.result.connect(lambda text: handle_command(text, source="voice"))
+    events.result.connect(lambda text, generation: handle_command(
+        text, source="voice", generation=generation))
     events.status.connect(handle_voice_status)
     simulator_timer = QTimer(window)
     simulator_timer.setInterval(100)

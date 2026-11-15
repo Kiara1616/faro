@@ -1,5 +1,10 @@
 import threading
+import sys
+import tempfile
+import time
+import types
 import unittest
+from unittest.mock import patch
 
 from faro.voice import VoiceRecognizer
 
@@ -45,6 +50,65 @@ class VoiceRecognizerTests(unittest.TestCase):
     def test_rejects_invalid_audio_configuration(self):
         with self.assertRaises(ValueError):
             VoiceRecognizer("model", lambda text: None, sample_rate=0)
+        with self.assertRaises(ValueError):
+            VoiceRecognizer("model", lambda text: None, audio_timeout_seconds=0)
+
+    def test_result_callback_failure_stops_capture_fail_closed(self):
+        statuses = []
+
+        def broken_callback(text):
+            raise RuntimeError("ui callback failed")
+
+        voice = VoiceRecognizer("model", broken_callback,
+                                lambda state, detail: statuses.append((state, detail)))
+        voice._emit_result("consultar estado")
+        self.assertTrue(voice._stop.is_set())
+        self.assertEqual(voice.capture_state, "error")
+        self.assertTrue(any(state == "error" for state, _ in statuses))
+
+    def test_result_context_preserves_capture_generation(self):
+        results = []
+        voice = VoiceRecognizer("model", lambda text: None,
+                                on_result_context=lambda text, generation: results.append((text, generation)))
+        voice._emit_result("confirmar", 7)
+        self.assertEqual(results, [("confirmar", 7)])
+
+    def test_silent_stream_triggers_watchdog_and_closes(self):
+        class FakeStream:
+            entered = False
+
+            def __enter__(self):
+                self.entered = True
+                FakeStream.entered = True
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        fake_sounddevice = types.SimpleNamespace(
+            RawInputStream=lambda **kwargs: FakeStream(),
+        )
+        fake_vosk = types.SimpleNamespace(
+            Model=lambda path: object(),
+            KaldiRecognizer=lambda model, rate, *args: types.SimpleNamespace(
+                AcceptWaveform=lambda chunk: False,
+            ),
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.dict(sys.modules, {"sounddevice": fake_sounddevice, "vosk": fake_vosk}):
+                statuses = []
+                voice = VoiceRecognizer(folder, lambda text: None,
+                                        lambda state, detail: statuses.append((state, detail)),
+                                        audio_timeout_seconds=0.05)
+                self.assertTrue(voice.start())
+                for _ in range(30):
+                    if voice.capture_state == "stopped":
+                        break
+                    time.sleep(0.02)
+                self.assertEqual(voice.capture_state, "stopped")
+                self.assertTrue(FakeStream.entered)
+                self.assertTrue(any(state == "error" and "No se reciben" in detail
+                                    for state, detail in statuses))
 
 
 if __name__ == "__main__":
