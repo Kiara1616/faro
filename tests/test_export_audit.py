@@ -39,3 +39,13 @@ def test_clean_evidence_removes_only_allowed_artifacts(tmp_path):
         (tmp_path / name).write_text("x", encoding="utf-8")
     assert set(clean_evidence(tmp_path)) == {"voice.wav", "audit.sqlite3", "run.log"}
     assert (tmp_path / "keep.txt").exists()
+
+
+def test_clean_evidence_removes_nested_disposable_artifacts_without_following_symlinks(tmp_path):
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (nested / "voice.wav").write_text("x", encoding="utf-8")
+    (nested / "keep.txt").write_text("x", encoding="utf-8")
+    removed = clean_evidence(tmp_path)
+    assert removed == ["nested/voice.wav"]
+    assert (nested / "keep.txt").exists()

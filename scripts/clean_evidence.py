@@ -14,10 +14,13 @@ def clean_evidence(folder: str | Path) -> list[str]:
     if not root.is_dir():
         raise FileNotFoundError(root)
     removed = []
-    for path in root.iterdir():
-        if path.is_file() and path.suffix.casefold() in ALLOWED_SUFFIXES:
+    for path in root.rglob("*"):
+        # Do not follow directories or symlinks; only remove disposable files
+        # explicitly selected by extension inside the caller-owned folder.
+        if (path.is_file() and not path.is_symlink()
+                and path.suffix.casefold() in ALLOWED_SUFFIXES):
             path.unlink()
-            removed.append(path.name)
+            removed.append(path.relative_to(root).as_posix())
     return removed
 
 

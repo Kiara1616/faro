@@ -10,6 +10,11 @@ work/
 *.sqlite
 *.sqlite3
 *.log
+*.wav
+*.mp3
+*.mp4
+private/
+briefing/
 build/
 dist/
 *.dist/
