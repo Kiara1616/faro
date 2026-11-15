@@ -25,7 +25,7 @@ usarse como resultado positivo.
 
 ## Evidencia ya disponible
 
-- 190 pruebas automatizadas aprobadas.
+- 191 pruebas automatizadas aprobadas (190 no-UI + 1 UI offscreen aislada).
 - Escenarios offline normal y fallo inyectado.
 - Diagnóstico offline `required_ok=true` en Windows 11/Python 3.12.10.
 - Smoke UI Qt offscreen `Qt smoke UI OK`.

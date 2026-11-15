@@ -1,14 +1,14 @@
 # Evidencia automatizada de entrega
 
 Fecha de ejecución: 2026-11-15  
-Commit de código/documentación: `1cf547d`  
+Commit de código/documentación: `69c36ef`  
 Entorno: Windows 11 (`10.0.26200`) · Python 3.12.10
 
 ## Resultados
 
 | Gate | Resultado observado |
 |---|---|
-| Suite completa | `190 passed in 5.40s` |
+| Suite aislada | `190 passed` no-UI + `1 passed` UI offscreen |
 | Escenario normal | `simulation_only=true`, taladros 101 y 102, estado `cerrado`, 6 terminales `completed` |
 | Escenario de fallo | `fallo_brazo`, estado `fallo`, 1 terminal `failed`, 0 taladros completados |
 | Diagnóstico offline | `required_ok=true`; plan, modelo, PySide6, pytest, Vosk, sounddevice y micrófonos detectados |
