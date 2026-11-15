@@ -28,7 +28,7 @@ class VoiceEvents(QObject):
     """Move worker-thread voice callbacks onto Qt's GUI thread."""
 
     result = Signal(str, object)
-    status = Signal(str, str)
+    status = Signal(str, str, object)
 
 
 def main() -> int:
@@ -46,8 +46,9 @@ def main() -> int:
     model_path = Path(os.environ.get("FARO_VOSK_MODEL", str(ROOT / "models" / "vosk-model-small-es-0.42")))
     raw_device = os.environ.get("FARO_AUDIO_DEVICE")
     audio_device = int(raw_device) if raw_device and raw_device.isdecimal() else raw_device
-    voice = VoiceRecognizer(model_path, lambda text: None, events.status.emit,
-                            device=audio_device, on_result_context=events.result.emit)
+    voice = VoiceRecognizer(model_path, lambda text: None, lambda state, detail: None,
+                            device=audio_device, on_result_context=events.result.emit,
+                            on_status_context=events.status.emit)
     ui_state = {
         "listening": False,
         "transcript": "",
@@ -97,8 +98,11 @@ def main() -> int:
                                     "state": domain.state.value})
         render()
 
-    def handle_voice_status(status: str, detail: str) -> None:
+    def handle_voice_status(status: str, detail: str, generation: int | None = None) -> None:
         nonlocal voice_error_detail
+        if (generation is not None and domain.session is not None
+                and generation != domain.session.generation):
+            return
         if status == "listening":
             voice_error_detail = None
             ui_state["listening"] = True

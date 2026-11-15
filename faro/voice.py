@@ -17,6 +17,7 @@ from typing import Callable
 ResultCallback = Callable[[str], None]
 ContextResultCallback = Callable[[str, int | None], None]
 StatusCallback = Callable[[str, str], None]
+ContextStatusCallback = Callable[[str, str, int | None], None]
 
 
 class VoiceRecognizer:
@@ -34,6 +35,7 @@ class VoiceRecognizer:
         grammar: list[str] | None = None,
         capture_generation: int | None = None,
         on_result_context: ContextResultCallback | None = None,
+        on_status_context: ContextStatusCallback | None = None,
         audio_timeout_seconds: float = 5.0,
     ) -> None:
         if sample_rate <= 0 or block_size <= 0:
@@ -49,10 +51,12 @@ class VoiceRecognizer:
         self.grammar = grammar
         self.capture_generation = capture_generation
         self.on_result_context = on_result_context
+        self.on_status_context = on_status_context
         self.audio_timeout_seconds = float(audio_timeout_seconds)
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
+        self._capture_open_lock = threading.Lock()
         self._capture_state = "stopped"
         self._last_error: str | None = None
 
@@ -86,7 +90,12 @@ class VoiceRecognizer:
 
     def stop(self, timeout: float = 2.0) -> None:
         """Request microphone shutdown and optionally wait for the worker."""
+        # Serialize the cancellation request with the tiny device-open
+        # critical section so stop cannot race between the preflight check and
+        # RawInputStream construction.
         self._stop.set()
+        with self._capture_open_lock:
+            pass
         with self._lock:
             worker = self._thread
         if worker is not None and worker is not threading.current_thread():
@@ -103,15 +112,18 @@ class VoiceRecognizer:
                 devices.append({"index": index, "name": str(device["name"])})
         return devices
 
-    def _emit_status(self, status: str, detail: str = "") -> None:
+    def _emit_status(self, status: str, detail: str = "", generation: int | None = None) -> None:
         with self._lock:
             if status in {"starting", "listening", "stopped", "error"}:
                 self._capture_state = status
             if status == "error":
                 self._last_error = detail
-        if self.on_status is not None:
+        if self.on_status is not None or self.on_status_context is not None:
             try:
-                self.on_status(status, detail)
+                if self.on_status_context is not None:
+                    self.on_status_context(status, detail, generation)
+                else:
+                    self.on_status(status, detail)
             except Exception:
                 pass  # A UI callback must not kill the audio worker.
 
@@ -127,10 +139,11 @@ class VoiceRecognizer:
                 # A UI/application callback failure must fail closed: stop
                 # consuming audio and let the worker close the stream.
                 self._stop.set()
-                self._emit_status("error", "Falló el procesamiento de la transcripción.")
+                self._emit_status("error", "Falló el procesamiento de la transcripción.", generation)
 
     def _run(self) -> None:
-        self._emit_status("starting", "Cargando reconocimiento de voz local.")
+        capture_generation = self.capture_generation
+        self._emit_status("starting", "Cargando reconocimiento de voz local.", capture_generation)
         try:
             if not self.model_path.is_dir():
                 raise FileNotFoundError(f"No se encontró el modelo Vosk: {self.model_path}")
@@ -152,7 +165,6 @@ class VoiceRecognizer:
 
             chunks: queue.Queue[bytes] = queue.Queue(maxsize=16)
             overflow_reported = False
-            capture_generation = self.capture_generation
             last_audio_at = time.monotonic()
 
             def audio_callback(indata: bytes, frames: int, time_info: object, status: object) -> None:
@@ -162,7 +174,7 @@ class VoiceRecognizer:
                 last_audio_at = time.monotonic()
                 if status and not overflow_reported:
                     overflow_reported = True
-                    self._emit_status("warning", f"La captura de audio reportó: {status}")
+                    self._emit_status("warning", f"La captura de audio reportó: {status}", capture_generation)
                 try:
                     chunks.put_nowait(bytes(indata))
                 except queue.Full:
@@ -174,17 +186,28 @@ class VoiceRecognizer:
                         pass
                     if not overflow_reported:
                         overflow_reported = True
-                        self._emit_status("warning", "Se descartaron fragmentos de audio.")
+                        self._emit_status("warning", "Se descartaron fragmentos de audio.", capture_generation)
 
-            with sd.RawInputStream(
-                samplerate=self.sample_rate,
-                blocksize=self.block_size,
-                device=self.device,
-                dtype="int16",
-                channels=1,
-                callback=audio_callback,
-            ):
-                self._emit_status("listening", "Micrófono activo; reconocimiento sin Internet.")
+            # Hold the open lock only across construction/enter and recheck
+            # cancellation after entering. A stop requested during model load
+            # therefore cannot produce a late "listening" state.
+            with self._capture_open_lock:
+                if self._stop.is_set():
+                    return
+                stream = sd.RawInputStream(
+                    samplerate=self.sample_rate,
+                    blocksize=self.block_size,
+                    device=self.device,
+                    dtype="int16",
+                    channels=1,
+                    callback=audio_callback,
+                )
+                stream.__enter__()
+                if self._stop.is_set():
+                    stream.__exit__(None, None, None)
+                    return
+            try:
+                self._emit_status("listening", "Micrófono activo; reconocimiento sin Internet.", capture_generation)
                 while not self._stop.is_set():
                     try:
                         chunk = chunks.get(timeout=0.1)
@@ -195,10 +218,12 @@ class VoiceRecognizer:
                     if recognizer.AcceptWaveform(chunk):
                         result = json.loads(recognizer.Result())
                         self._emit_result(str(result.get("text", "")), capture_generation)
+            finally:
+                stream.__exit__(None, None, None)
         except ImportError as exc:
-            self._emit_status("error", f"Falta una dependencia de voz: {exc}. Instale requirements-voice.txt.")
+            self._emit_status("error", f"Falta una dependencia de voz: {exc}. Instale requirements-voice.txt.", capture_generation)
         except Exception as exc:
-            self._emit_status("error", f"No se pudo iniciar o mantener el reconocimiento: {exc}")
+            self._emit_status("error", f"No se pudo iniciar o mantener el reconocimiento: {exc}", capture_generation)
         finally:
             self._stop.set()
-            self._emit_status("stopped", "Micrófono desactivado.")
+            self._emit_status("stopped", "Micrófono desactivado.", capture_generation)

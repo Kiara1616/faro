@@ -73,6 +73,14 @@ class VoiceRecognizerTests(unittest.TestCase):
         voice._emit_result("confirmar", 7)
         self.assertEqual(results, [("confirmar", 7)])
 
+    def test_status_context_preserves_capture_generation(self):
+        statuses = []
+        voice = VoiceRecognizer("model", lambda text: None,
+                                on_status_context=lambda state, detail, generation:
+                                statuses.append((state, generation)))
+        voice._emit_status("stopped", "done", 9)
+        self.assertEqual(statuses, [("stopped", 9)])
+
     def test_silent_stream_triggers_watchdog_and_closes(self):
         class FakeStream:
             entered = False
@@ -109,6 +117,51 @@ class VoiceRecognizerTests(unittest.TestCase):
                 self.assertTrue(FakeStream.entered)
                 self.assertTrue(any(state == "error" and "No se reciben" in detail
                                     for state, detail in statuses))
+
+    def test_stop_racing_device_open_never_emits_listening(self):
+        constructor_entered = threading.Event()
+        release_constructor = threading.Event()
+        events = []
+
+        class FakeStream:
+            def __enter__(self):
+                events.append("entered")
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                events.append("closed")
+
+        def raw_stream(**kwargs):
+            constructor_entered.set()
+            release_constructor.wait(timeout=2)
+            return FakeStream()
+
+        fake_sounddevice = types.SimpleNamespace(RawInputStream=raw_stream)
+        fake_vosk = types.SimpleNamespace(
+            Model=lambda path: object(),
+            KaldiRecognizer=lambda model, rate, *args: types.SimpleNamespace(
+                AcceptWaveform=lambda chunk: False,
+            ),
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.dict(sys.modules, {"sounddevice": fake_sounddevice, "vosk": fake_vosk}):
+                statuses = []
+                voice = VoiceRecognizer(folder, lambda text: None,
+                                        lambda state, detail: statuses.append(state),
+                                        audio_timeout_seconds=0.2)
+                voice.start()
+                self.assertTrue(constructor_entered.wait(timeout=2))
+                stopper = threading.Thread(target=voice.stop)
+                stopper.start()
+                time.sleep(0.02)
+                release_constructor.set()
+                stopper.join(timeout=2)
+                for _ in range(30):
+                    if voice.capture_state == "stopped":
+                        break
+                    time.sleep(0.02)
+                self.assertNotIn("listening", statuses)
+                self.assertEqual(voice.capture_state, "stopped")
 
 
 if __name__ == "__main__":
