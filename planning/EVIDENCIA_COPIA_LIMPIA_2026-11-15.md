@@ -1,7 +1,7 @@
 # Evidencia de copia limpia — 2026-11-15
 
 Repositorio: `Kiara1616/faro`  
-Commit reconstruido: `f5e209b`  
+Commit reconstruido: `9f41de0`  
 Script: `scripts/verify_clean_copy.ps1`  
 Entorno: Windows 11 · Python 3.12.10 · modelo Vosk local disponible.
 
@@ -15,6 +15,11 @@ Entorno: Windows 11 · Python 3.12.10 · modelo Vosk local disponible.
 | Escenario `fallo_brazo` | estado `fallo`, cero taladros completados, un terminal `failed` |
 | Manifiesto | generado y `--verify` = `OK` |
 | Limpieza | carpeta temporal eliminada por `finally` |
+
+En una ejecución Windows Qt devolvió un código nativo no cero después de
+reportar `195 passed`; el script solo lo tolera cuando no aparecen fallos ni
+errores, igual que la puerta CI. La ejecución final terminó `Copia limpia
+automatizada: OK`.
 
 ## Qué demuestra
 
