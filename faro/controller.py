@@ -86,14 +86,22 @@ class FaroController:
 
     def _handle_control(self, intent: str, *, session_id: str, source: Source,
                         generation: int | None = None):
+        before = self.domain.state
+        control_id = f"control-{time.monotonic_ns()}"
+        session = self.domain.session
+        if source is Source.VOICE:
+            if session is None or session.session_id != session_id:
+                return self._control_decision(False, "invalid_session", control_id, before)
+            if session.mode is not Mode.VOZ or not session.listening:
+                return self._control_decision(False, "voice_disabled_in_manual", control_id, before)
+            if generation != session.generation:
+                return self._control_decision(False, "stale_listening_generation", control_id, before)
         if intent in {"modo_manual", "modo_voz"}:
             return self.domain.handle_control(intent, session_id=session_id,
                                               source=source, generation=generation)
         if intent == "pausar" and not self.confirmation_pending:
             return self.domain.handle_input(Command(Intent.PAUSAR), source=source,
                                             session_id=session_id, generation=generation)
-        before = self.domain.state
-        control_id = f"control-{time.monotonic_ns()}"
         pending = self.confirmation_gate.pending
         pause_cancelled_confirmation = intent == "pausar" and self.confirmation_pending
         if pause_cancelled_confirmation:

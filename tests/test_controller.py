@@ -228,6 +228,26 @@ def test_pause_during_confirmation_cancels_pending_without_simulator_request(tmp
     assert "confirmation_cancelled" in events
 
 
+def test_stale_voice_control_cannot_confirm_pending_action(tmp_path):
+    controller = FaroController.create(PLAN, tmp_path / "stale-control.sqlite3")
+    assert controller.domain.set_mode(controller.session_id, Mode.VOZ)
+    assert controller.domain.set_listening(controller.session_id, True)
+    generation = controller.domain.session.generation
+    for text in ("seleccionar taladro 101", "consultar taladro 101", "preparar carga",
+                 "validar producto alfa, cien kilos"):
+        assert controller.process(text, source=Source.VOICE, generation=generation).decision.accepted
+    pending = controller.process("extender brazo", source=Source.VOICE,
+                                  generation=generation, zone_clear=True)
+    assert pending.decision.accepted
+    assert controller.domain.set_listening(controller.session_id, False)
+    assert controller.domain.set_listening(controller.session_id, True)
+    stale = controller.process("confirmar", source=Source.VOICE, generation=generation)
+    assert stale.decision is not None and not stale.decision.accepted
+    assert stale.decision.reason == "stale_listening_generation"
+    assert controller.confirmation_pending
+    assert controller.simulator.busy is False
+
+
 def test_controller_audit_includes_selected_scenario(tmp_path):
     scenarios = load_scenarios(Path(__file__).resolve().parents[1] / "fixtures" / "escenarios_demo.json")
     controller = FaroController.create(PLAN, tmp_path / "scenario.sqlite3", scenario=scenarios["fallo_brazo"])
