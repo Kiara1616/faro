@@ -18,7 +18,12 @@ jobs:
       - name: Run tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m pytest -q
+        shell: pwsh
+        run: |
+          python -m pytest -q --ignore=tests/test_ui_recovery.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pytest -q tests/test_ui_recovery.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Import desktop UI
         env:
           QT_QPA_PLATFORM: offscreen
