@@ -13,7 +13,11 @@ El manifiesto cubre los archivos esenciales y recorre el árbol distribuible
 carpeta `work/` no se hashea, pero se escanea: si contiene WAV, SQLite, logs o
 material privado, la generación falla hasta limpiarla. Así detecta cambios en
 el código y en el modelo, no solo en nueve archivos raíz. Un archivo esencial
-ausente, añadido o modificado produce `MISMATCH`; no se ignora silenciosamente.
+ausente, añadido o modificado dentro del árbol distribuible produce `MISMATCH`;
+`work/` y directorios de desarrollo se excluyen del hash, pero `work/` se
+escanea para rechazar audio, SQLite, logs o material privado antes de entregar.
+No se ignora silenciosamente un cambio en código, fixtures, documentación,
+scripts o modelo.
 El modelo Vosk se prepara antes de desconectar la red y se verifica con
 `scripts/setup_voice_model.py --check`.
 
