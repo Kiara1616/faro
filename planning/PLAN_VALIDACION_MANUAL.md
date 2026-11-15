@@ -1,5 +1,8 @@
 # Plan de validación manual para Faro
 
+La hoja operativa resumida para ejecutar este plan está en
+`planning/HOJA_EJECUCION_MANUAL.md`.
+
 Versión de trabajo: `ad18fc0` · fecha: 2026-11-15
 
 Este plan convierte los criterios humanos pendientes de F-10, F-11, F-12,
