@@ -30,6 +30,7 @@ jobs:
           foreach ($uiTest in $uiTests) {
             python -m pytest -q $uiTest
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Start-Sleep -Seconds 2
           }
       - name: Import desktop UI
         env:
