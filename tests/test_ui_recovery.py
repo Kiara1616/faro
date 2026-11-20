@@ -84,3 +84,14 @@ def test_console_contract_exposes_blocking_alert_without_color_only_signal(qt_ap
     assert "BLOQUEANTE" in window.execution_status.text()
     assert window.decision_state.text() == "RECHAZADO"
     window.close()
+
+
+def test_next_step_after_validation_points_to_movement(qt_app):
+    window = FaroWindow()
+    window.render_state({"operation": {
+        "state": "preparado", "hole_id": "101", "product": "producto alfa",
+        "planned_kg": 100, "delivery_method": "brazo", "plan_validated": True,
+    }})
+    assert "Simular zona despejada" in window.next_command.text()
+    assert "extender brazo" in window.next_command.text()
+    window.close()

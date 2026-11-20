@@ -44,6 +44,7 @@ def build_snapshot(controller: FaroController, ui_state: Mapping[str, Any]) -> d
             "product": hole.product if hole else None,
             "planned_kg": hole.planned_kg if hole else None,
             "delivery_method": hole.delivery_method if hole else None,
+            "plan_validated": domain.plan_validated,
             "scenario": controller.scenario_name,
             "state": state,
         },

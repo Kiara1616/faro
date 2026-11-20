@@ -362,7 +362,11 @@ class FaroWindow(QWidget):
                 "sin_seleccion": f"Oye Faro, seleccionar taladro {hole_id}",
                 "seleccionado": "Oye Faro, consultar plan",
                 "consultado": "Oye Faro, preparar carga",
-                "preparado": f"Oye Faro, validar {operation_data.get('product') or 'producto alfa'}, {operation_data.get('planned_kg') or '100'} kilos",
+                "preparado": (
+                    f"Marca «Simular zona despejada» y di: Oye Faro, extender {method}"
+                    if operation_data.get("plan_validated") else
+                    f"Oye Faro, validar {operation_data.get('product') or 'producto alfa'}, {operation_data.get('planned_kg') or '100'} kilos"
+                ),
                 "confirmacion_pendiente": "Confirma o cancela la orden pendiente",
                 "posicionado": "Oye Faro, iniciar carga",
                 "cargado": f"Oye Faro, retraer {method}",
