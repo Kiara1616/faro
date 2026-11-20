@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F7F8FC">
+    <meta name="description" content="Panel operativo Faro para el recorrido de la malla.">
+    <title>Faro | Panel operativo</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Faro">
+        <span class="brand-name">FARO<span class="brand-period">.</span></span>
+      </a>
+    </header>
+
+    <main class="page-shell">
+      <section class="page-intro">
+        <div>
+          <p class="eyebrow">OPERACIÓN</p>
+          <h1>Control de malla</h1>
+        </div>
+        <div class="plan-context"><span>PLAN</span><strong id="plan-name">Cargando…</strong></div>
+      </section>
+
+      <div class="dashboard">
+        <section class="operation-card" aria-labelledby="operation-title">
+          <div class="card-heading">
+            <h2 id="operation-title">Estado actual</h2>
+            <span id="state-pill" class="state-pill" aria-live="polite">Esperando selección</span>
+          </div>
+
+          <div class="metrics-grid" aria-label="Datos del taladro activo">
+            <article class="metric metric-hole">
+              <span class="metric-label">TALADRO</span>
+              <strong id="hole-id" class="metric-primary">—</strong>
+              <span id="hole-state" class="metric-note">Sin seleccionar</span>
+            </article>
+            <article class="metric">
+              <span class="metric-label">PRODUCTO</span>
+              <strong id="product" class="metric-value">—</strong>
+            </article>
+            <article class="metric">
+              <span class="metric-label">KG</span>
+              <strong id="planned-kg" class="metric-value">—</strong>
+            </article>
+            <article class="metric">
+              <span class="metric-label">ENTREGA</span>
+              <strong id="delivery-method" class="metric-value">—</strong>
+            </article>
+          </div>
+
+          <div class="scenario-line">
+            <span id="scenario-label" class="scenario-value">Preparando escenario…</span>
+            <label id="zone-control" class="zone-control" for="zone-clear">
+              <input id="zone-clear" type="checkbox">
+              <span class="zone-copy"><strong>Zona despejada</strong><small id="zone-label">Marca manual · sin sensor</small></span>
+            </label>
+          </div>
+
+          <section class="scene-section" aria-labelledby="scene-title">
+            <div class="scene-heading">
+              <h3 id="scene-title">Referencia de malla</h3>
+              <span id="scene-caption" class="scene-caption">Unidad en base</span>
+            </div>
+            <div class="scene-wrap">
+              <svg id="demo-scene" class="demo-scene" viewBox="0 0 800 190" role="img" aria-labelledby="scene-svg-title scene-svg-description">
+                <title id="scene-svg-title">Camión y puntos de la malla</title>
+                <desc id="scene-svg-description">Esquema visual del camión y el estado de cada taladro.</desc>
+                <line class="scene-route" x1="182" y1="126" x2="780" y2="126"></line>
+                <line id="active-link" class="active-link" aria-hidden="true"></line>
+                <g class="scene-truck" transform="translate(18 38)" aria-hidden="true">
+                  <path class="truck-boom" d="M142 39 L177 22 L193 31"></path>
+                  <rect class="truck-body" x="4" y="34" width="106" height="43" rx="9"></rect>
+                  <path class="truck-cab" d="M110 45 Q110 34 121 34 H145 L163 52 V77 H110 Z"></path>
+                  <path class="truck-window" d="M124 41 H141 L153 54 H124 Z"></path>
+                  <circle class="truck-wheel" cx="34" cy="79" r="10"></circle>
+                  <circle class="truck-wheel" cx="131" cy="79" r="10"></circle>
+                  <circle class="truck-hub" cx="34" cy="79" r="3"></circle>
+                  <circle class="truck-hub" cx="131" cy="79" r="3"></circle>
+                </g>
+                <g id="scene-holes" class="scene-holes"></g>
+              </svg>
+            </div>
+            <div class="scene-legend" aria-label="Estados de la malla">
+              <span><i class="legend-dot legend-active"></i>Activo</span>
+              <span><i class="legend-dot legend-complete"></i>Completado</span>
+              <span><i class="legend-dot"></i>Pendiente</span>
+              <span><i class="legend-dot legend-blocked"></i>Bloqueado</span>
+            </div>
+          </section>
+
+          <section class="journey" aria-labelledby="journey-title">
+            <div class="subsection-heading">
+              <div>
+                <h3 id="journey-title">Progreso</h3>
+              </div>
+              <span id="progress-label" class="progress-label">0 de 8 etapas</span>
+            </div>
+            <ol id="journey-steps" class="journey-steps">
+              <li data-step="0"><span class="step-index">01</span><span>Seleccionar taladro</span></li>
+              <li data-step="1"><span class="step-index">02</span><span>Consultar plan</span></li>
+              <li data-step="2"><span class="step-index">03</span><span>Preparar carga</span></li>
+              <li data-step="3"><span class="step-index">04</span><span>Validar producto y kg</span></li>
+              <li data-step="4"><span class="step-index">05</span><span>Extender</span></li>
+              <li data-step="5"><span class="step-index">06</span><span>Simular carga</span></li>
+              <li data-step="6"><span class="step-index">07</span><span>Retraer</span></li>
+              <li data-step="7"><span class="step-index">08</span><span>Cerrar taladro</span></li>
+            </ol>
+          </section>
+
+          <div id="alert-panel" class="alert-panel" hidden role="status"></div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite">
+            <span class="feedback-icon" aria-hidden="true">i</span>
+            <span id="feedback-text">Selecciona el taladro sugerido para comenzar.</span>
+          </div>
+        </section>
+
+        <aside class="control-card" aria-labelledby="control-title">
+          <div class="card-heading control-heading">
+            <h2 id="control-title">Siguiente paso</h2>
+          </div>
+
+          <div class="suggestion-box">
+            <h3 id="suggestion-title">Seleccionar taladro 101</h3>
+            <p id="suggestion-description">Inicia el recorrido con el primer taladro disponible.</p>
+            <button id="suggestion-button" class="button button-primary button-wide" type="button">Comenzar recorrido</button>
+          </div>
+
+          <div id="confirmation-panel" class="confirmation-panel" hidden>
+            <p id="confirmation-text" class="confirmation-text"></p>
+            <div class="button-row">
+              <button id="confirm-button" class="button button-primary" type="button">Confirmar</button>
+              <button id="cancel-button" class="button button-secondary" type="button">Cancelar</button>
+            </div>
+          </div>
+
+          <div class="manual-command">
+            <label for="command-input">Comando</label>
+            <div class="command-entry">
+              <input id="command-input" type="text" inputmode="text" autocomplete="off" placeholder="Ej.: consultar taladro 101">
+              <button id="send-button" class="button button-dark" type="button">Enviar</button>
+            </div>
+          </div>
+
+          <div id="recovery-panel" class="recovery-panel" hidden>
+            <p>El resultado necesita revisión manual antes de continuar.</p>
+            <button id="recovery-button" class="button button-secondary button-wide" type="button">Registrar revisión</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="lower-grid">
+        <section class="lower-card" aria-labelledby="plan-title">
+          <div class="subsection-heading">
+            <div>
+              <p class="eyebrow">MALLA</p>
+              <h2 id="plan-title">Taladros</h2>
+            </div>
+            <span id="plan-progress" class="progress-label">—</span>
+          </div>
+          <div id="hole-list" class="hole-list"></div>
+        </section>
+
+        <section class="lower-card history-card" aria-labelledby="history-title">
+          <div class="subsection-heading">
+            <div>
+              <p class="eyebrow">ACTIVIDAD</p>
+              <h2 id="history-title">Últimas acciones</h2>
+            </div>
+            <span id="history-count" class="history-count">0</span>
+          </div>
+          <ol id="event-list" class="event-list">
+            <li class="empty-event">Las acciones del recorrido aparecerán aquí.</li>
+          </ol>
+        </section>
+      </div>
+
+      <footer class="page-footer">
+        <span>Vista de demostración · Sin conexión a maquinaria</span>
+      </footer>
+    </main>
+  </body>
+</html>

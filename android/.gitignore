@@ -1,0 +1,6 @@
+/.gradle/
+/local.properties
+/app/build/
+/app/src/main/python/faro/
+/app/src/main/python/fixtures/
+/app/src/main/python/web/

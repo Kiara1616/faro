@@ -4,7 +4,7 @@ import pytest
 
 
 pytest.importorskip("PySide6")
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLabel
 
 from faro.ui import FaroWindow
 
@@ -61,7 +61,8 @@ def test_console_contract_keeps_simulation_and_plan_context_visible(qt_app):
         "history": [{"transcript": "extender brazo", "accepted": True,
                      "decision": "accepted", "state": "en_curso"}],
     })
-    assert "PLAN Y EQUIPO SIMULADOS" in window.simulation_notice.text()
+    assert "DATOS FICTICIOS" in window.simulation_notice.text()
+    assert "SIN CONTROL FÍSICO" in window.simulation_notice.text()
     assert window.manual_card.isHidden()
     assert "Espera el resultado" in window.next_command.text()
     assert window.workflow_status.text() == "EN CURSO"
@@ -92,6 +93,21 @@ def test_next_step_after_validation_points_to_movement(qt_app):
         "state": "preparado", "hole_id": "101", "product": "producto alfa",
         "planned_kg": 100, "delivery_method": "brazo", "plan_validated": True,
     }})
-    assert "Zona despejada · simulación" in window.next_command.text()
+    assert "Zona despejada" in window.next_command.text()
     assert "extender brazo" in window.next_command.text()
+    window.close()
+
+
+def test_navigation_responds_to_clicks_and_copy_is_current(qt_app):
+    window = FaroWindow()
+    window.show()
+    qt_app.processEvents()
+    assert window.nav_buttons[0].isChecked()
+    window.nav_buttons[1].click()
+    assert window.pages.currentIndex() == 1
+    window.nav_buttons[2].click()
+    assert window.pages.currentIndex() == 2
+    visible_copy = " ".join(label.text() for label in window.findChildren(QLabel))
+    assert "entrada manual de prueba" not in visible_copy.lower()
+    assert "prototipo académico" not in visible_copy.lower()
     window.close()

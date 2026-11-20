@@ -55,7 +55,7 @@ Con la captura activada manualmente, Vosk continúa procesando el audio localmen
 - **LLM local:** reservado, si aporta valor, para ayuda o consulta de documentación; nunca como autoridad de control. No es requisito de v1.
 - **Prefijo obligatorio en voz:** cada orden hablada debe empezar con «Oye Faro», ya sea en la misma frase o seguido por una orden dentro de seis segundos. «Faro» solo y los prefijos dentro de una frase no activan órdenes. Un detector que encienda el micrófono desde reposo queda fuera de v1 y requeriría pruebas de falsas activaciones.
 - **TTS local:** útil solo para confirmaciones breves después de probar inteligibilidad; la pantalla sigue mostrando el estado.
-- **LoRa, nube, Bluetooth y servidor web:** no se necesitan para la ruta de voz local a simulador. El briefing no confirmó una interfaz física para estos canales.
+- **LoRa, nube y Bluetooth:** no se usan; el briefing no confirmó interfaces físicas para estos canales. Se añadió una vista web opcional para tablet: escucha solo en `127.0.0.1` por defecto y puede habilitarse en la red local para mostrar/controlar el mismo simulador ficticio. No implementa conectores industriales ni acceso a Internet.
 - **PostgreSQL o microservicios:** no aportan al prototipo de una sola laptop y crean dependencias de red/operación.
 
 ## Contratos entre componentes

@@ -1,8 +1,8 @@
-"""Check that the demo runtime has no network client boundary.
+"""Check that the demo runtime has no outbound network client boundary.
 
-The model installer is intentionally the only module allowed to use urllib;
-it runs before an offline rehearsal. Runtime code (app.py, faro/ and tests' demo
-scripts) must remain local and simulator-only.
+The optional web console serves its local HTML interface to a browser; it does
+not connect to an external service. The model installer is intentionally the
+only module allowed to use urllib and runs before an offline rehearsal.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ FORBIDDEN = re.compile(
     re.IGNORECASE,
 )
 ALLOWED = {Path("scripts/setup_voice_model.py")}
-SCAN_ROOTS = (Path("app.py"), Path("faro"), Path("scripts"))
+SCAN_ROOTS = (Path("app.py"), Path("web_app.py"), Path("faro"), Path("scripts"))
 
 
 def _python_files(root: Path):

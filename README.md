@@ -1,6 +1,6 @@
 # Faro — prototipo del Reto 3 ORICA
 
-Aplicación de escritorio para demostrar interacción por voz en una **consola ficticia de carguío por taladro**. El proyecto se presentó inicialmente como SafeFlow AI y ahora se llama **Faro** para facilitar la invocación oral. No se conecta a maquinaria, PLC, LOADPlus, sistemas de iniciación ni controles físicos. La malla, productos, kilos, brazo, manguera y estados son datos de demostración; no son parámetros operativos de ORICA.
+Aplicación de escritorio y consola web local para demostrar interacción por voz o pantalla táctil en una **simulación ficticia por taladro**. El proyecto se presentó inicialmente como SafeFlow AI y ahora se llama **Faro** para facilitar la invocación oral. No se conecta a maquinaria, PLC, LOADPlus, sistemas de iniciación ni controles físicos. La malla, productos, kilos, brazo, manguera y estados son datos de demostración; no son parámetros operativos de ORICA.
 
 El [plan de integración](planning/PLAN_FARO_ORICA.md), la [arquitectura](planning/ARQUITECTURA_FARO.md) y el [backlog de issues](planning/ISSUES_FARO_ORICA.md) organizan ese cambio hasta la entrega del proyecto el 10 de noviembre.
 
@@ -34,6 +34,19 @@ Si el entorno ya está preparado, basta el último comando. El modelo español q
 ```
 
 Para usar un modelo en otra carpeta, configure `FARO_VOSK_MODEL` con su ruta antes de abrir la aplicación. Si no hay micrófono o modelo, la entrada escrita sigue disponible para demostrar las reglas. El botón **Activar escucha** inicia el micrófono; **Detener escucha** lo apaga.
+
+## Consola táctil para tablet
+
+La vista web adapta el recorrido a tabletas Android, incluida la Samsung Galaxy Tab S10 FE. Desde la laptop, ejecuta `python web_app.py` y abre `http://127.0.0.1:8765` para probarla en el mismo equipo. Esta vista usa botones guiados y comandos escritos; la captura de voz continúa en la aplicación de escritorio.
+
+Para abrirla en la tablet, conecta ambos dispositivos a una red Wi-Fi privada compartida y habilita el acceso local en PowerShell:
+
+```powershell
+$env:FARO_WEB_HOST="0.0.0.0"
+python web_app.py
+```
+
+En la tablet, abre `http://<IPv4-de-la-laptop>:8765` en Samsung Internet o Chrome. La dirección IPv4 de la laptop aparece con `ipconfig`. Deja la aplicación ejecutándose durante la prueba. El servidor escucha solo en este equipo por defecto; el acceso desde la red se activa con la variable anterior y sirve únicamente la interfaz y el simulador local.
 
 Antes de una demostración sin red, ejecute el diagnóstico local (no descarga ni contacta servicios externos):
 
@@ -72,7 +85,7 @@ Todos los datos son ficticios y no representan especificaciones industriales.
 | Frente | Responsabilidad | Tecnología |
 | --- | --- | --- |
 | Interacción de voz | Captura, transcripción y errores de micrófono | `sounddevice`, Vosk español local |
-| Consola | Pantallas, estados, entrada y bitácora visible | PySide6 Essentials |
+| Consola | Escritorio con voz y vista web táctil para tablet; ambos muestran estados y bitácora | PySide6 Essentials, HTML/CSS/JavaScript |
 | Motor contextual | Lista de comandos, secuencia, contraste y rechazos | Python, reglas explícitas |
 | Integración | Eventos entre hilos, arranque, datos locales y pruebas | Señales Qt, SQLite, pytest |
 

@@ -1,7 +1,8 @@
-"""Run the Faro desktop simulator.
+"""Run Faro's desktop simulator.
 
-All commands affect only an in-process, fictional workflow. This application has
-no industrial connectors, network control endpoints, or physical outputs.
+Commands affect only the fictional workflow. The optional tablet interface is
+started separately by ``web_app.py`` and serves the same local simulator.
+Neither interface has industrial connectors or physical outputs.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from pathlib import Path
 import sys
 
 from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 
 from faro.controller import FaroController
@@ -36,6 +38,7 @@ class VoiceEvents(QObject):
 
 def main() -> int:
     app = QApplication(sys.argv)
+    QFontDatabase.addApplicationFont(str(ROOT / "web" / "assets" / "Inter-latin.ttf"))
     plan = load_demo_plan(ROOT / "fixtures" / "malla_demo.json")
     scenarios = load_scenarios(ROOT / "fixtures" / "escenarios_demo.json")
     scenario_name = os.environ.get("FARO_SCENARIO", "normal")
@@ -57,7 +60,7 @@ def main() -> int:
     ui_state = {
         "listening": False,
         "transcript": "",
-        "decision": "Esperando una solicitud",
+        "decision": "Esperando primera orden",
         "voice_status": "Micrófono inactivo",
         "command_status": "en espera",
         "history": [],

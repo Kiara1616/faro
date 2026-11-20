@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -41,7 +42,7 @@ def _label(text: str, role: str = "") -> QLabel:
 
 def _card() -> tuple[QFrame, QVBoxLayout]:
     frame = QFrame()
-    frame.setObjectName("card")
+    frame.setObjectName("section")
     layout = QVBoxLayout(frame)
     layout.setContentsMargins(16, 13, 16, 13)
     layout.setSpacing(6)
@@ -62,10 +63,20 @@ class FaroWindow(QWidget):
     zone_clear_toggled = Signal(bool)
 
     VIEW_INDEX = {"operacion": 0, "malla": 1, "registro": 2}
+    ALERT_LABELS = {
+        "unknown_hole": "El taladro no está incluido en el plan.",
+        "hole_blocked": "El taladro está bloqueado en el plan.",
+        "hole_mismatch": "La instrucción indica un taladro distinto del activo.",
+        "next_hole_mismatch": "Selecciona el siguiente taladro indicado por el plan.",
+        "invalid_plan_values": "Indica el producto y la cantidad completos.",
+        "plan_mismatch": "El producto o la cantidad no coincide con el plan ficticio.",
+        "wrong_delivery_method": "El método no coincide con el plan ficticio.",
+        "fictional_zone_occupied": "La zona simulada no está marcada como despejada.",
+    }
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("SafeFlow AI · Faro | Simulación de carguío")
+        self.setWindowTitle("Faro | Consola de simulación")
         self.setMinimumSize(1000, 640)
         self.resize(1280, 720)
         self._listening = False
@@ -75,16 +86,13 @@ class FaroWindow(QWidget):
 
     def _build(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(20, 15, 20, 12)
+        root.setContentsMargins(24, 14, 24, 12)
         root.setSpacing(12)
 
         header = QHBoxLayout()
         title_group = QVBoxLayout()
         title_group.setSpacing(3)
-        title_group.addWidget(_label("SAFEFLOW AI  /  FARO", "title"))
-        title_group.addWidget(
-            _label("Asistente de voz para el flujo de carguío por taladro", "subtitle")
-        )
+        title_group.addWidget(_label("FARO", "title"))
         header.addLayout(title_group, 1)
         root.addLayout(header)
 
@@ -99,7 +107,7 @@ class FaroWindow(QWidget):
         nav = QHBoxLayout()
         nav.setSpacing(4)
         self.nav_buttons = []
-        for index, text in enumerate(("OPERACIÓN", "PLAN DE DEMO", "BITÁCORA")):
+        for index, text in enumerate(("OPERACIÓN", "PLAN", "BITÁCORA")):
             item = QPushButton(text)
             item.setProperty("role", "nav")
             item.setCheckable(True)
@@ -119,26 +127,28 @@ class FaroWindow(QWidget):
         body.addLayout(sidebar, 4)
 
         voice_card, voice_layout = _card()
-        voice_layout.addWidget(_label("CONTROL POR VOZ · LOCAL", "eyebrow"))
+        voice_card.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        voice_layout.addWidget(_label("VOZ", "eyebrow"))
         self.voice_status = _label("Micrófono inactivo", "voice-status")
         voice_layout.addWidget(self.voice_status)
         self.voice_button = QPushButton("Activar escucha  ·  F8")
         self.voice_button.setObjectName("voiceButton")
         self.voice_button.clicked.connect(self._toggle_listening)
         voice_layout.addWidget(self.voice_button)
-        voice_layout.addWidget(_label("Con la escucha activa, di «Oye Faro» antes de la orden. Faro descarta transcripciones sin esa frase.", "caption"))
+        voice_layout.addWidget(_label("Di «Oye Faro» antes de cada orden.", "caption"))
         sidebar.addWidget(voice_card)
 
-        self.manual_toggle = QPushButton("Mostrar entrada manual de prueba")
+        self.manual_toggle = QPushButton("Mostrar comando escrito")
         self.manual_toggle.setProperty("role", "subtle")
+        self.manual_toggle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.manual_toggle.clicked.connect(self._toggle_manual_controls)
         sidebar.addWidget(self.manual_toggle)
 
         command_card, command_layout = _card()
-        command_layout.addWidget(_label("CONTROL MANUAL PARA LA DEMO", "eyebrow"))
+        command_layout.addWidget(_label("COMANDO ESCRITO", "eyebrow"))
         command_row = QHBoxLayout()
         self.command_input = QLineEdit()
-        self.command_input.setPlaceholderText("Escribe un comando de prueba")
+        self.command_input.setPlaceholderText("Escribe una instrucción")
         self.command_input.returnPressed.connect(self._submit_command)
         command_row.addWidget(self.command_input, 1)
         send_button = QPushButton("Enviar")
@@ -150,16 +160,19 @@ class FaroWindow(QWidget):
         sidebar.addWidget(command_card)
 
         decision_card, decision_layout = _card()
+        decision_card.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         decision_header = QHBoxLayout()
-        decision_header.addWidget(_label("RESPUESTA DEL SISTEMA", "eyebrow"), 1)
+        decision_header.addWidget(_label("ÚLTIMA RESPUESTA", "eyebrow"), 1)
         self.decision_state = _label("EN ESPERA", "decision-state")
         decision_header.addWidget(self.decision_state)
         decision_layout.addLayout(decision_header)
-        self.transcript_label = _label("Sin comando recibido", "caption")
-        self.decision_label = _label("Esperando una solicitud", "decision-message")
+        self.transcript_label = _label("", "caption")
+        self.transcript_label.setVisible(False)
+        self.decision_label = _label("Esperando primera orden", "decision-message")
         decision_layout.addWidget(self.transcript_label)
         decision_layout.addWidget(self.decision_label)
-        self.execution_status = _label("Estado de ejecución: en espera", "caption")
+        self.execution_status = _label("", "caption")
+        self.execution_status.setVisible(False)
         decision_layout.addWidget(self.execution_status)
         self.confirmation_controls = QWidget()
         self.confirmation_controls.setObjectName("confirmControls")
@@ -179,9 +192,10 @@ class FaroWindow(QWidget):
         self.recovery_button.clicked.connect(self.recovery_requested.emit)
         decision_layout.addWidget(self.recovery_button)
         sidebar.addWidget(decision_card)
+        sidebar.addStretch(1)
 
         self.simulation_notice = _label(
-            "SAFEFLOW AI / FARO  ·  PLAN Y EQUIPO SIMULADOS  ·  SIN CONTROL DE MAQUINARIA",
+            "FARO  ·  DATOS FICTICIOS  ·  SIN CONTROL FÍSICO",
             "footer",
         )
         root.addWidget(self.simulation_notice)
@@ -200,19 +214,32 @@ class FaroWindow(QWidget):
         status_layout.addWidget(_label("ESTADO DE LA TAREA", "eyebrow"))
         self.workflow_status = _label("Sin taladro seleccionado", "hero")
         status_layout.addWidget(self.workflow_status)
-        self.workflow_detail = _label("Seleccione un taladro de la malla ficticia para comenzar.", "workflow-detail")
+        self.workflow_detail = _label("Selecciona un taladro para comenzar el recorrido.", "workflow-detail")
         status_layout.addWidget(self.workflow_detail)
         self.next_command = _label("PRÓXIMA ORDEN · Oye Faro, seleccionar taladro 101", "next-command")
         status_layout.addWidget(self.next_command)
         zone_row = QHBoxLayout()
-        self.zone_clear_checkbox = QCheckBox("Zona despejada · simulación")
+        self.zone_clear_checkbox = QCheckBox("Zona despejada")
         self.zone_clear_checkbox.toggled.connect(self.zone_clear_toggled.emit)
         zone_row.addWidget(self.zone_clear_checkbox)
         self.zone_clear_note = _label(
-            "Condición ficticia, sin sensor conectado.", "caption")
+            "Marca de demostración; no proviene de un sensor.", "caption")
         zone_row.addWidget(self.zone_clear_note, 1)
         status_layout.addLayout(zone_row)
         layout.addWidget(self.status_card)
+        progress_section, progress_layout = _card()
+        progress_layout.addWidget(_label("RECORRIDO", "eyebrow"))
+        progress_heading = QHBoxLayout()
+        self.operation_stage = _label("Seleccionar taladro", "stage-title")
+        self.operation_stage_count = _label("0 / 8", "caption")
+        progress_heading.addWidget(self.operation_stage, 1)
+        progress_heading.addWidget(self.operation_stage_count)
+        progress_layout.addLayout(progress_heading)
+        self.operation_progress = QProgressBar()
+        self.operation_progress.setRange(0, 8)
+        self.operation_progress.setTextVisible(False)
+        progress_layout.addWidget(self.operation_progress)
+        layout.addWidget(progress_section)
         layout.addStretch(1)
         return self._scroll(page)
 
@@ -222,11 +249,11 @@ class FaroWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
         intro, intro_layout = _card()
-        intro_layout.addWidget(_label("02 / PLAN PRECARGADO", "eyebrow"))
+        intro_layout.addWidget(_label("PLAN PRECARGADO", "eyebrow"))
         self.plan_name_label = _label("Plan de demostración", "page-title")
         intro_layout.addWidget(self.plan_name_label)
         intro_layout.addWidget(
-            _label("Cada ficha representa un taladro de ejemplo. El orden es ilustrativo; no indica posiciones reales.", "caption")
+            _label("El plan muestra los taladros disponibles y el avance de la simulación.", "caption")
         )
         layout.addWidget(intro)
         self.plan_scene = DemoScene(height=310)
@@ -254,7 +281,7 @@ class FaroWindow(QWidget):
         intro_layout.addWidget(_label("ÓRDENES DE ESTA SESIÓN", "eyebrow"))
         intro_layout.addWidget(_label("Historial de decisiones", "page-title"))
         intro_layout.addWidget(
-            _label("Se muestran las transcripciones, aceptaciones y rechazos de la interfaz.", "caption")
+            _label("Instrucciones recibidas y decisiones del simulador.", "caption")
         )
         layout.addWidget(intro)
         history_card, history_layout = _card()
@@ -286,8 +313,8 @@ class FaroWindow(QWidget):
     def _toggle_manual_controls(self) -> None:
         visible = self.manual_card.isHidden()
         self.manual_card.setVisible(visible)
-        self.manual_toggle.setText("Ocultar entrada manual de prueba" if visible
-                                   else "Mostrar entrada manual de prueba")
+        self.manual_toggle.setText("Ocultar comando escrito" if visible
+                                   else "Mostrar comando escrito")
 
     def _submit_command(self) -> None:
         command = self.command_input.text().strip()
@@ -317,13 +344,16 @@ class FaroWindow(QWidget):
 
         transcript = snapshot.get("transcript")
         if transcript is not None:
-            self.transcript_label.setText(f"Reconocido: {transcript}" if transcript else "Sin comando recibido")
+            self.transcript_label.setText(f"Orden: {transcript}" if transcript else "")
+            self.transcript_label.setVisible(bool(transcript))
         decision = snapshot.get("decision")
         if decision is not None:
             self.decision_label.setText(str(decision) or "Esperando una solicitud")
         command_status = snapshot.get("command_status")
         if command_status is not None:
-            self.execution_status.setText(f"Estado de ejecución: {command_status}")
+            show_execution = str(command_status).strip().lower() not in {"", "en espera"}
+            self.execution_status.setText(f"Estado de ejecución: {command_status}" if show_execution else "")
+            self.execution_status.setVisible(show_execution)
             normalized_status = str(command_status).lower()
             operation = snapshot.get("operation")
             if isinstance(operation, Mapping) and "state" in operation:
@@ -337,15 +367,17 @@ class FaroWindow(QWidget):
         alert = snapshot.get("alert")
         if isinstance(alert, Mapping):
             reason = alert.get("reason", "revisión requerida")
+            reason = self.ALERT_LABELS.get(str(reason), str(reason).replace("_", " "))
             blocking = " · BLOQUEANTE" if alert.get("blocking") else ""
             self.execution_status.setText(f"Estado de ejecución: requiere revisión · {reason}{blocking}")
+            self.execution_status.setVisible(True)
 
         workflow = snapshot.get("workflow", {})
         if isinstance(workflow, Mapping):
             active = bool(workflow.get("active", False))
             default_detail = (
                 "La simulación está lista para recibir una orden."
-                if active else "Seleccione un taladro de la malla ficticia para comenzar."
+                if active else "Selecciona un taladro para comenzar el recorrido."
             )
             self.workflow_status.setText(str(workflow.get("status", "Sin taladro seleccionado")))
             self.workflow_detail.setText(str(workflow.get("detail", default_detail)))
@@ -356,6 +388,22 @@ class FaroWindow(QWidget):
         operation_state = str(snapshot.get("operation", {}).get("state", "sin_seleccion")) if isinstance(snapshot.get("operation"), Mapping) else "sin_seleccion"
         operation_data = snapshot.get("operation", {})
         if isinstance(operation_data, Mapping):
+            completed_steps = {
+                "sin_seleccion": 0, "seleccionado": 1, "consultado": 2,
+                "confirmacion_pendiente": 4, "movimiento_en_curso": 4,
+                "posicionado": 5, "carga_en_curso": 5, "cargado": 6,
+                "retraccion_en_curso": 6, "retraido": 7, "cerrado": 8,
+            }.get(operation_state, self.operation_progress.value())
+            if operation_state == "preparado":
+                completed_steps = 4 if operation_data.get("plan_validated") else 3
+            stage_names = (
+                "Seleccionar taladro", "Consultar plan", "Preparar carga",
+                "Validar producto y kg", "Extender equipo", "Simular carga",
+                "Retraer equipo", "Cerrar taladro", "Taladro completo",
+            )
+            self.operation_progress.setValue(completed_steps)
+            self.operation_stage.setText(stage_names[completed_steps])
+            self.operation_stage_count.setText(f"{completed_steps} / 8")
             hole_id = operation_data.get("hole_id") or "101"
             method = str(operation_data.get("delivery_method") or "brazo")
             next_orders = {
@@ -363,7 +411,7 @@ class FaroWindow(QWidget):
                 "seleccionado": "Oye Faro, consultar plan",
                 "consultado": "Oye Faro, preparar carga",
                 "preparado": (
-                    f"Marca «Zona despejada · simulación» y di: Oye Faro, extender {method}"
+                    f"Marca «Zona despejada» y di: Oye Faro, extender {method}"
                     if operation_data.get("plan_validated") else
                     f"Oye Faro, validar {operation_data.get('product') or 'producto alfa'}, {operation_data.get('planned_kg') or '100'} kilos"
                 ),
@@ -456,54 +504,54 @@ class FaroWindow(QWidget):
     def _style(self) -> None:
         self.setStyleSheet(
             """
-            QWidget { background: #171b20; color: #f1f0eb; font-family: 'Segoe UI'; font-size: 13px; }
-            QLabel[role='title'] { color: #faf8f2; font-size: 25px; font-weight: 800; letter-spacing: 1px; }
-            QLabel[role='subtitle'] { color: #b8b4ab; font-size: 12px; }
-            QFrame#card { background: #242a30; border: 1px solid #414951; border-radius: 9px; }
-            QFrame#card QLabel { background: transparent; }
-            QPushButton[role='nav'] { background: #292f35; color: #c2beb4; border: 1px solid #414951;
-                                      border-radius: 5px; padding: 11px 4px; font-size: 11px; font-weight: 700; }
-            QPushButton[role='nav']:checked { background: #39352e; color: #f5c36a;
-                                               border-bottom: 3px solid #e5a33f; }
-            QLabel[role='eyebrow'] { color: #d8ae69; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
-            QLabel[role='page-title'] { color: #f4f1e9; font-size: 22px; font-weight: 700; }
-            QLabel[role='hero'] { font-size: 34px; font-weight: 800; color: #ffffff; }
-            QLabel[role='workflow-detail'] { color: #ccc8be; font-size: 16px; }
-            QLabel[role='voice-status'] { color: #f4f1e9; font-size: 23px; font-weight: 700; }
-            QLabel[role='decision-message'] { color: #f4f1e9; font-size: 20px; font-weight: 700; }
-            QFrame#card QLabel[role='next-command'] { color: #ffd48b; background: #3c301e;
-                           border: 1px solid #976d36; border-radius: 5px; padding: 13px; font-size: 18px; font-weight: 700; }
-            QFrame#holeTile { background: #2d343a; border: 1px solid #50575d; border-radius: 7px; }
-            QFrame#holeTile[holeStatus='activo'] { background: #433a2b; border: 2px solid #e5a33f; }
-            QFrame#holeTile[holeStatus='completado'] { background: #304039; border-color: #80b492; }
-            QFrame#holeTile[holeStatus='bloqueado'] { background: #49323a; border-color: #c76f6b; }
+            QWidget { background: #f7f8fc; color: #0f172a; font-family: 'Inter'; font-size: 14px; }
+            QLabel[role='title'] { color: #0f172a; font-size: 29px; font-weight: 800; letter-spacing: 1px; }
+            QLabel[role='subtitle'] { color: #64748b; font-size: 14px; }
+            QFrame#section { background: transparent; border: 0; border-bottom: 1px solid #cbd5e1; border-radius: 0; }
+            QFrame#section QLabel { background: transparent; }
+            QPushButton[role='nav'] { background: transparent; color: #64748b; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 12px; min-height: 48px; font-size: 14px; font-weight: 700; }
+            QPushButton[role='nav']:checked { background: transparent; color: #2563eb; border-bottom: 2px solid #2563eb; }
+            QLabel[role='eyebrow'] { color: #2563eb; font-size: 12px; font-weight: 800; letter-spacing: 1px; }
+            QLabel[role='page-title'] { color: #0f172a; font-size: 24px; font-weight: 700; }
+            QLabel[role='hero'] { font-size: 34px; font-weight: 800; color: #0f172a; }
+            QLabel[role='workflow-detail'] { color: #64748b; font-size: 16px; }
+            QLabel[role='voice-status'] { color: #0f172a; font-size: 22px; font-weight: 700; }
+            QLabel[role='decision-message'] { color: #0f172a; font-size: 19px; font-weight: 700; }
+            QLabel[role='stage-title'] { color: #0f172a; font-size: 18px; font-weight: 700; }
+            QFrame#section QLabel[role='next-command'] { color: #1d4ed8; background: transparent; border: 0; border-left: 3px solid #2563eb; border-radius: 0; padding: 9px 12px; font-size: 17px; font-weight: 700; }
+            QFrame#holeTile { background: transparent; border: 0; border-top: 2px solid #cbd5e1; border-radius: 0; }
+            QFrame#holeTile[holeStatus='activo'] { background: transparent; border-top: 2px solid #2563eb; }
+            QFrame#holeTile[holeStatus='completado'] { background: transparent; border-top: 2px solid #64748b; }
+            QFrame#holeTile[holeStatus='bloqueado'] { background: transparent; border-top: 2px solid #d66b60; }
             QFrame#holeTile QLabel { background: transparent; }
-            QLabel[role='tile-id'] { color: #ffffff; font-size: 29px; font-weight: 800; }
-            QLabel[role='tile-status'] { color: #e5b663; font-size: 10px; font-weight: 700; }
-            QLabel[role='tile-detail'] { color: #c8c4bb; font-size: 11px; }
-            QProgressBar { background: #343a3f; border: 0; border-radius: 5px; height: 18px;
-                           text-align: center; color: #f4f1e9; font-size: 10px; font-weight: 700; }
-            QProgressBar::chunk { background: #bd832d; border-radius: 5px; }
-            QLabel[role='caption'] { color: #bcb7ad; font-size: 12px; }
-            QLabel[role='footer'] { color: #9d988e; font-size: 10px; font-weight: 600; }
-            QLabel[role='decision-state'] { color: #d3cfc6; background: #3c4145; padding: 5px 7px;
-                                            font-size: 10px; font-weight: 700; }
-            QLabel[role='decision-state'][outcome='accepted'] { color: #9df0c9; background: #235443; }
-            QLabel[role='decision-state'][outcome='rejected'] { color: #ffb4a3; background: #603a38; }
-            QPushButton { background: #ad7425; color: #171b20; border: 1px solid #d69a45; border-radius: 5px;
-                          padding: 9px 11px; font-weight: 700; }
-            QPushButton:hover { background: #d69538; }
-            QPushButton#voiceButton { font-size: 19px; padding: 16px; }
-            QPushButton[role='subtle'] { background: #30363b; color: #d2cdc2; border-color: #515a61;
-                                         font-size: 11px; padding: 8px; }
-            QPushButton[listening='true'] { background: #944c43; border-color: #b8665b; }
-            QLineEdit { background: #1c2227; color: #f4f1e9; border: 1px solid #596068; border-radius: 4px; padding: 9px;
-                        selection-background-color: #986a31; }
-            QLineEdit:focus { border-color: #e5a33f; }
-            QCheckBox { background: transparent; spacing: 9px; font-size: 15px; font-weight: 700; }
-            QListWidget { background: #1c2227; color: #f1f0eb; border: 1px solid #50575d; outline: 0; }
-            QListWidget::item { padding: 7px 5px; border-bottom: 1px solid #414951; }
-            QListWidget::item:selected { background: #70532c; color: #ffffff; }
+            QLabel[role='tile-id'] { color: #0f172a; font-size: 29px; font-weight: 800; }
+            QLabel[role='tile-status'] { color: #2563eb; font-size: 12px; font-weight: 800; }
+            QLabel[role='tile-detail'] { color: #64748b; font-size: 13px; }
+            QProgressBar { background: #e4e9f0; border: 0; border-radius: 8px; height: 21px;
+                           text-align: center; color: #0f172a; font-size: 12px; font-weight: 700; }
+            QProgressBar::chunk { background: #2563eb; border-radius: 8px; }
+            QLabel[role='caption'] { color: #64748b; font-size: 14px; }
+            QLabel[role='footer'] { color: #8290a3; font-size: 12px; font-weight: 700; }
+            QLabel[role='decision-state'] { color: #64748b; background: transparent; border: 0; padding: 7px 0; font-size: 12px; font-weight: 800; }
+            QLabel[role='decision-state'][outcome='accepted'] { color: #1f6b50; background: #e1f2e9; }
+            QLabel[role='decision-state'][outcome='rejected'] { color: #a54131; background: #fae8e4; }
+            QPushButton { background: #2563eb; color: #ffffff; border: 1px solid #2563eb; border-radius: 10px;
+                          padding: 12px 15px; min-height: 48px; font-weight: 700; }
+            QPushButton:hover { background: #1d4ed8; }
+            QPushButton:disabled { background: #94a3b8; border-color: #94a3b8; }
+            QPushButton#voiceButton { font-size: 18px; padding: 15px; }
+            QPushButton[role='subtle'] { background: transparent; color: #2563eb; border: 0; border-radius: 0; text-align: left; min-height: 36px; font-size: 14px; padding: 6px 14px; }
+            QPushButton[role='subtle']:hover { background: #eaf1ff; }
+            QPushButton#voiceButton[listening='true'] { background: #b42318; border-color: #b42318; }
+            QPushButton#voiceButton[listening='true']:hover { background: #912018; border-color: #912018; }
+            QLineEdit { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 9px; padding: 11px;
+                        min-height: 44px; selection-background-color: #2563eb; }
+            QLineEdit:focus { border-color: #2563eb; }
+            QCheckBox { background: transparent; spacing: 10px; font-size: 15px; font-weight: 700; }
+            QCheckBox::indicator { width: 22px; height: 22px; }
+            QListWidget { background: transparent; color: #0f172a; border: 0; outline: 0; }
+            QListWidget::item { padding: 10px 7px; border-bottom: 1px solid #e4e9f0; }
+            QListWidget::item:selected { background: #eaf1ff; color: #0f172a; }
             QScrollArea { background: transparent; border: none; }
             QWidget#confirmControls { background: transparent; }
             """
