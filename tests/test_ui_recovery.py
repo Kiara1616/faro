@@ -27,10 +27,12 @@ def test_manual_recovery_button_is_disabled_until_review(qt_app):
         "product": "producto alfa", "planned_kg": 100,
     }})
     assert window.workflow_status.text() == "CONFIRMACIÓN REQUERIDA"
+    assert not window.confirmation_controls.isHidden()
     assert "taladro 101" in window.workflow_detail.text()
     assert "extender brazo" in window.workflow_detail.text()
     window.render_state({"command_status": "recuperado manualmente"})
     assert not window.recovery_button.isEnabled()
+    assert window.confirmation_controls.isHidden()
     window.close()
 
 
@@ -59,12 +61,9 @@ def test_console_contract_keeps_simulation_and_plan_context_visible(qt_app):
         "history": [{"transcript": "extender brazo", "accepted": True,
                      "decision": "accepted", "state": "en_curso"}],
     })
-    assert window.connection_badge.text() == "SIMULACIÓN - SIN CONEXIÓN A EQUIPO"
-    assert window.operation_labels["hole_id"].text() == "101"
-    assert window.operation_labels["product"].text() == "producto alfa"
-    assert window.operation_labels["planned_kg"].text() == "100"
-    assert window.operation_labels["delivery_method"].text() == "brazo"
-    assert "Operador de prueba" in window.session_label.text()
+    assert "PLAN Y EQUIPO SIMULADOS" in window.simulation_notice.text()
+    assert window.manual_card.isHidden()
+    assert "Espera el resultado" in window.next_command.text()
     assert window.workflow_status.text() == "EN CURSO"
     assert window.execution_status.text() == "Estado de ejecución: en curso"
     assert window.decision_state.text() == "ACEPTADO"

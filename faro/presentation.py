@@ -54,9 +54,9 @@ def build_snapshot(controller: FaroController, ui_state: Mapping[str, Any]) -> d
                                and not controller.confirmation_pending
                                and domain.pending is None),
         "zone_clear_note": (
-            "Este escenario mantiene la zona ficticia ocupada; el movimiento se rechaza."
+            "Escenario con zona ocupada: movimiento bloqueado."
             if not controller.zone_clear_available else
-            "Este control no lee sensores. Sin marcarlo, Faro rechaza el movimiento simulado."
+            "Condición ficticia, sin sensor conectado."
         ),
         "session": domain.session_snapshot(),
         "workflow": {

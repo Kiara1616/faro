@@ -33,6 +33,7 @@ class ParseResult:
 _SIMPLE: dict[str, Intent | str] = {
     "consultar estado": Intent.CONSULTAR_ESTADO,
     "consultar plan": Intent.CONSULTAR_PLAN,
+    "consultar taladro": Intent.CONSULTAR_PLAN,
     "preparar carga": Intent.PREPARAR_CARGA,
     "extender brazo": Intent.EXTENDER_BRAZO,
     "extender manguera": Intent.EXTENDER_MANGUERA,

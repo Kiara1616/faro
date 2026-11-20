@@ -305,9 +305,14 @@ class FaroDomain:
         if not isinstance(command.intent, Intent):
             return reject("unknown_intent")
         intent = command.intent
-        if intent in {Intent.CONSULTAR_ESTADO, Intent.CONSULTAR_PLAN}:
-            if intent is Intent.CONSULTAR_PLAN and self.selected_hole is None:
+        if intent is Intent.CONSULTAR_ESTADO:
+            return accept("read_only")
+        if intent is Intent.CONSULTAR_PLAN:
+            if self.selected_hole is None:
                 return reject("no_hole_selected")
+            if self.state is State.SELECCIONADO:
+                self.state = State.CONSULTADO
+                return accept("plan_consulted")
             return accept("read_only")
         if intent is Intent.PAUSAR:
             if self.pending is None or self.cancel_requested:

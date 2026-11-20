@@ -101,8 +101,16 @@ def main() -> int:
             accepted, intent, reason = result.decision.accepted, result.parsed.intent or "desconocido", result.decision.reason
             ui_state["command_status"] = "interpretado / aceptado" if accepted else "rechazado"
         ui_state["decision"] = reason
+        if (result.decision is not None and result.decision.accepted
+                and result.parsed.intent in {"consultar_plan", "consultar_taladro"}
+                and domain.selected_hole is not None):
+            hole = domain.selected_hole
+            ui_state["decision"] = (
+                f"Plan ficticio del taladro {hole.id}: {hole.product}, "
+                f"{hole.planned_kg} kg, entrega por {hole.delivery_method}."
+            )
         ui_state["history"].append({"transcript": text, "intent": intent,
-                                    "accepted": accepted, "decision": reason,
+                                    "accepted": accepted, "decision": ui_state["decision"],
                                     "state": domain.state.value,
                                     "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds")})
         render()

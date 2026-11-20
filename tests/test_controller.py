@@ -1,6 +1,8 @@
 from pathlib import Path
 import time
 
+import pytest
+
 from faro.controller import FaroController
 from faro.domain import Mode, Source, State
 from faro.plan import load_demo_plan
@@ -23,6 +25,22 @@ def confirm(controller):
     assert result.decision is not None and result.decision.accepted
     assert result.decision.state_after is controller.domain.state
     return result
+
+
+@pytest.mark.parametrize("phrase", ["consultar plan", "consultar taladro"])
+def test_plan_consultation_advances_selected_hole_and_allows_preparation(tmp_path, phrase):
+    controller = FaroController.create(PLAN, tmp_path / "audit.sqlite3")
+    no_selection = controller.process(phrase)
+    assert no_selection.decision is not None
+    assert no_selection.decision.reason == "no_hole_selected"
+
+    assert controller.process("seleccionar taladro 101").decision.accepted
+    consulted = controller.process(phrase)
+    assert consulted.decision is not None and consulted.decision.accepted
+    assert consulted.decision.reason == "plan_consulted"
+    assert controller.domain.state is State.CONSULTADO
+    assert controller.process("preparar carga").decision.accepted
+    assert controller.domain.state is State.PREPARADO
 
 
 def test_controller_completes_two_holes_and_audits_events(tmp_path):

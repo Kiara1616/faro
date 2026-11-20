@@ -50,7 +50,7 @@ class DemoScene(QWidget):
             painter.drawLine(0, y, self.width(), y)
 
         painter.setPen(QColor("#9bbdca"))
-        painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         painter.drawText(QRectF(22, 16, w - 44, 22), "VISTA DE OPERACIÓN · ESQUEMA ILUSTRATIVO")
         painter.setPen(QColor("#54d8d2"))
         painter.drawText(QRectF(w - 190, 16, 165, 22), Qt.AlignmentFlag.AlignRight, "DATOS DE DEMO")
@@ -59,7 +59,7 @@ class DemoScene(QWidget):
             ("TALADRO ACTIVO", self._selected or "—"),
             ("PRODUCTO", str(self._operation.get("product") or "—")),
             ("OBJETIVO", f"{self._operation['planned_kg']} kg" if self._operation.get("planned_kg") else "—"),
-            ("EQUIPO", self._state.replace("_", " ").upper()),
+            ("ETAPA", self._state.replace("_", " ").upper()),
         )
         field_width = min((w - 55) / 4, 190)
         for index, (name, value) in enumerate(fields):
@@ -69,10 +69,10 @@ class DemoScene(QWidget):
             painter.setBrush(QColor("#163648"))
             painter.drawRoundedRect(rect, 5, 5)
             painter.setPen(QColor("#8fbac8"))
-            painter.setFont(QFont("Segoe UI", 7, QFont.Weight.Bold))
+            painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             painter.drawText(QRectF(x + 9, 49, field_width - 18, 14), name)
             painter.setPen(QColor("#f1fafb"))
-            painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            painter.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
             painter.drawText(QRectF(x + 9, 63, field_width - 18, 19), value)
 
         floor_y = h * 0.72
@@ -93,7 +93,7 @@ class DemoScene(QWidget):
         for offset in (29, 111):
             painter.drawEllipse(QPointF(truck_x + offset, floor_y + 1), 13, 13)
         painter.setPen(QColor("#dbeaf0"))
-        painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         painter.drawText(QRectF(truck_x, truck_y - 23, 150, 20), "UNIDAD SIMULADA")
 
         count = len(self._plan)
@@ -112,10 +112,10 @@ class DemoScene(QWidget):
                 painter.setPen(QPen(color, 2))
                 painter.drawEllipse(QPointF(cx, floor_y), 13, 13)
                 painter.setPen(color)
-                painter.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+                painter.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
                 painter.drawText(QRectF(cx - 35, floor_y - 55, 70, 24),
                                  Qt.AlignmentFlag.AlignCenter, identifier)
-                painter.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+                painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
                 painter.drawText(QRectF(cx - 60, floor_y - 30, 120, 17),
                                  Qt.AlignmentFlag.AlignCenter, status.upper())
 
