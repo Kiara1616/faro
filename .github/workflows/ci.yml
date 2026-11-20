@@ -26,11 +26,11 @@ jobs:
           $uiOutput = @(python -m pytest -q tests/test_ui_recovery.py 2>&1)
           $uiExit = $LASTEXITCODE
           $uiOutput | Write-Output
-          if ($uiExit -ne 0 -and -not ($uiOutput -match '3 passed')) {
+          if ($uiExit -ne 0 -and -not ($uiOutput -match '^\d+ passed in ')) {
             exit $uiExit
           }
           if ($uiExit -ne 0) {
-            Write-Warning 'Qt finalizó con código nativo no cero después de 3 pruebas aprobadas; se conserva el resultado de pytest.'
+            Write-Warning 'Qt finalizó con código nativo no cero después de las pruebas aprobadas; se conserva el resultado de pytest.'
           }
           python scripts/check_offline_boundary.py --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
