@@ -100,7 +100,10 @@ def main() -> int:
         else:
             accepted, intent, reason = result.decision.accepted, result.parsed.intent or "desconocido", result.decision.reason
             ui_state["command_status"] = "interpretado / aceptado" if accepted else "rechazado"
-        ui_state["decision"] = reason
+        ui_state["decision"] = (
+            "No identifiqué ese taladro en el plan. Di el número dígito a dígito, por ejemplo «uno cero uno»."
+            if reason == "unknown_or_incomplete_hole_id" else reason
+        )
         if (result.decision is not None and result.decision.accepted
                 and result.parsed.intent in {"consultar_plan", "consultar_taladro"}
                 and domain.selected_hole is not None):

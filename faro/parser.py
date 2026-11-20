@@ -64,6 +64,7 @@ _TENS = {30: "treinta", 40: "cuarenta", 50: "cincuenta", 60: "sesenta",
 _HUNDREDS = {200: "doscientos", 300: "trescientos", 400: "cuatrocientos",
              500: "quinientos", 600: "seiscientos", 700: "setecientos",
              800: "ochocientos", 900: "novecientos"}
+_DIGIT_WORDS = {"0": "cero", **{str(value): _SMALL[value] for value in range(1, 10)}}
 
 
 def _number_words(value: int) -> str:
@@ -120,10 +121,11 @@ def parse_command(text: str, plan: DemoPlan, *, listening_active: bool = False) 
         return _result("ok", simple, None, "matched_control", original, normalized)
 
     ids = {hole.id for hole in plan.holes}
-    spoken_ids = {
-        _number_words(int(hole_id)): hole_id for hole_id in ids
-        if 1 <= int(hole_id) < 1000
-    }
+    spoken_ids = {}
+    for hole_id in ids:
+        if 1 <= int(hole_id) < 1000:
+            spoken_ids[_number_words(int(hole_id))] = hole_id
+            spoken_ids[" ".join(_DIGIT_WORDS[digit] for digit in hole_id)] = hole_id
     for verb, intent in (("seleccionar", Intent.SELECCIONAR_TALADRO),
                          ("consultar", Intent.CONSULTAR_TALADRO)):
         prefix = f"{verb} taladro "

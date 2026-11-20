@@ -32,7 +32,7 @@ def test_voice_commands_use_session_generation_and_same_domain_rules():
     domain, pipe = pipeline(Mode.VOZ)
     assert domain.set_listening("demo-voice", True)
     generation = domain.session.generation
-    assert send(pipe, "Oye Faro, seleccionar taladro 101", source=Source.VOICE,
+    assert send(pipe, "Oye Faro, seleccionar taladro uno cero uno", source=Source.VOICE,
                 generation=generation).decision.accepted
     assert send(pipe, "Oye Faro, consultar taladro 101", source=Source.VOICE,
                 generation=generation).decision.accepted

@@ -13,10 +13,10 @@ class DemoScene(QWidget):
     """Draw a schematic unit and hole positions; no real coordinates are implied."""
 
     COLORS = {
-        "activo": QColor("#31d7d0"),
-        "completado": QColor("#79d9a3"),
+        "activo": QColor("#e5a33f"),
+        "completado": QColor("#80b492"),
         "bloqueado": QColor("#f28478"),
-        "pendiente": QColor("#92a9b9"),
+        "pendiente": QColor("#a7aaa9"),
     }
 
     def __init__(self, *, height: int = 250) -> None:
@@ -39,20 +39,20 @@ class DemoScene(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = float(self.width()), float(self.height())
         background = QLinearGradient(0, 0, w, h)
-        background.setColorAt(0, QColor("#081b2a"))
-        background.setColorAt(1, QColor("#143b50"))
+        background.setColorAt(0, QColor("#1c2227"))
+        background.setColorAt(1, QColor("#303840"))
         painter.fillRect(self.rect(), background)
 
-        painter.setPen(QPen(QColor("#24485a"), 1))
+        painter.setPen(QPen(QColor("#3d464d"), 1))
         for x in range(0, self.width(), 36):
             painter.drawLine(x, 0, x, self.height())
         for y in range(0, self.height(), 36):
             painter.drawLine(0, y, self.width(), y)
 
-        painter.setPen(QColor("#9bbdca"))
+        painter.setPen(QColor("#c9c3b8"))
         painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         painter.drawText(QRectF(22, 16, w - 44, 22), "VISTA DE OPERACIÓN · ESQUEMA ILUSTRATIVO")
-        painter.setPen(QColor("#54d8d2"))
+        painter.setPen(QColor("#e5b663"))
         painter.drawText(QRectF(w - 190, 16, 165, 22), Qt.AlignmentFlag.AlignRight, "DATOS DE DEMO")
 
         fields = (
@@ -65,20 +65,20 @@ class DemoScene(QWidget):
         for index, (name, value) in enumerate(fields):
             x = 22 + index * (field_width + 7)
             rect = QRectF(x, 47, field_width, 38)
-            painter.setPen(QPen(QColor("#31596b"), 1))
-            painter.setBrush(QColor("#163648"))
+            painter.setPen(QPen(QColor("#515960"), 1))
+            painter.setBrush(QColor("#2b3339"))
             painter.drawRoundedRect(rect, 5, 5)
-            painter.setPen(QColor("#8fbac8"))
+            painter.setPen(QColor("#c7bba4"))
             painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             painter.drawText(QRectF(x + 9, 49, field_width - 18, 14), name)
-            painter.setPen(QColor("#f1fafb"))
+            painter.setPen(QColor("#f4f1e9"))
             painter.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
             painter.drawText(QRectF(x + 9, 63, field_width - 18, 19), value)
 
         floor_y = h * 0.72
-        painter.setPen(QPen(QColor("#5d8290"), 3))
+        painter.setPen(QPen(QColor("#788087"), 3))
         painter.drawLine(QPointF(16, floor_y), QPointF(w - 16, floor_y))
-        painter.fillRect(QRectF(16, floor_y + 3, w - 32, h - floor_y), QColor("#102c3b"))
+        painter.fillRect(QRectF(16, floor_y + 3, w - 32, h - floor_y), QColor("#252c31"))
 
         # The vehicle is intentionally schematic and stays separate from real equipment controls.
         truck_x, truck_y = w * 0.09, floor_y - 55
@@ -87,12 +87,12 @@ class DemoScene(QWidget):
         painter.drawRoundedRect(QRectF(truck_x, truck_y + 12, 124, 43), 8, 8)
         painter.setBrush(QColor("#d99131"))
         painter.drawRoundedRect(QRectF(truck_x + 92, truck_y, 48, 55), 7, 7)
-        painter.setBrush(QColor("#2c5365"))
+        painter.setBrush(QColor("#4f585f"))
         painter.drawRoundedRect(QRectF(truck_x + 102, truck_y + 8, 28, 19), 3, 3)
-        painter.setBrush(QColor("#07141e"))
+        painter.setBrush(QColor("#111519"))
         for offset in (29, 111):
             painter.drawEllipse(QPointF(truck_x + offset, floor_y + 1), 13, 13)
-        painter.setPen(QColor("#dbeaf0"))
+        painter.setPen(QColor("#ece7db"))
         painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         painter.drawText(QRectF(truck_x, truck_y - 23, 150, 20), "UNIDAD SIMULADA")
 
@@ -107,7 +107,7 @@ class DemoScene(QWidget):
                 color = self.COLORS.get(status, self.COLORS["pendiente"])
                 painter.setPen(QPen(color, 3))
                 painter.drawLine(QPointF(cx, floor_y + 8), QPointF(cx, h - 23))
-                painter.setBrush(QColor("#102c3b"))
+                painter.setBrush(QColor("#252c31"))
                 painter.drawEllipse(QPointF(cx, floor_y), 13, 13)
                 painter.setPen(QPen(color, 2))
                 painter.drawEllipse(QPointF(cx, floor_y), 13, 13)
@@ -123,7 +123,7 @@ class DemoScene(QWidget):
                     "movimiento_en_curso", "posicionado", "carga_en_curso", "cargado",
                     "retraccion_en_curso", "retraido",
                 }:
-                    painter.setPen(QPen(QColor("#31d7d0"), 4))
+                    painter.setPen(QPen(QColor("#e5a33f"), 4))
                     painter.drawLine(QPointF(truck_x + 126, truck_y + 28),
                                      QPointF(cx - 12, floor_y - 3))
         painter.end()
