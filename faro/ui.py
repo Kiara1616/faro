@@ -20,7 +20,9 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QProgressBar,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -61,7 +63,7 @@ class FaroWindow(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Faro V1 | Consola de simulación")
+        self.setWindowTitle("SafeFlow AI · Faro | Simulación de carguío")
         self.setMinimumSize(1000, 640)
         self.resize(1280, 720)
         self._listening = False
@@ -77,9 +79,9 @@ class FaroWindow(QWidget):
         header = QHBoxLayout()
         title_group = QVBoxLayout()
         title_group.setSpacing(3)
-        title_group.addWidget(_label("FARO  /  V1", "title"))
+        title_group.addWidget(_label("SAFEFLOW AI  /  FARO", "title"))
         title_group.addWidget(
-            _label("Consola de operación por taladro · Prototipo académico", "subtitle")
+            _label("Asistente de voz para el flujo de carguío por taladro", "subtitle")
         )
         header.addLayout(title_group, 1)
         self.connection_badge = _label("SIMULACIÓN - SIN CONEXIÓN A EQUIPO", "badge")
@@ -98,7 +100,7 @@ class FaroWindow(QWidget):
         nav = QHBoxLayout()
         nav.setSpacing(4)
         self.nav_buttons = []
-        for index, text in enumerate(("OPERACIÓN", "MALLA FICTICIA", "BITÁCORA")):
+        for index, text in enumerate(("OPERACIÓN", "PLAN DE DEMO", "BITÁCORA")):
             item = QPushButton(text)
             item.setProperty("role", "nav")
             item.setCheckable(True)
@@ -114,12 +116,11 @@ class FaroWindow(QWidget):
         main_column.addWidget(self.pages, 1)
 
         hint_card, hint_layout = _card()
-        hint_layout.addWidget(_label("COMANDOS DE DEMOSTRACIÓN", "eyebrow"))
+        hint_layout.addWidget(_label("RECORRIDO SUGERIDO · DI «OYE FARO» ANTES DE CADA ORDEN", "eyebrow"))
         hint_layout.addWidget(
             _label(
-                "Seleccionar taladro 101  /  Consultar plan  /  Preparar carga  /  "
-                "Validar producto alfa, cien kilos  /  Simular zona despejada  /  "
-                "Extender brazo  /  Confirmar la orden"
+                "1 Seleccionar taladro 101   →   2 Consultar plan   →   3 Preparar carga   →   "
+                "4 Validar producto alfa, cien kilos   →   5 Extender brazo"
             )
         )
         main_column.addWidget(hint_card)
@@ -129,7 +130,7 @@ class FaroWindow(QWidget):
         body.addLayout(sidebar, 4)
 
         voice_card, voice_layout = _card()
-        voice_layout.addWidget(_label("CANAL DE VOZ", "eyebrow"))
+        voice_layout.addWidget(_label("CONTROL POR VOZ · LOCAL", "eyebrow"))
         self.voice_status = _label("Micrófono inactivo", "value")
         voice_layout.addWidget(self.voice_status)
         self.voice_button = QPushButton("Activar escucha  ·  F8")
@@ -139,7 +140,7 @@ class FaroWindow(QWidget):
         sidebar.addWidget(voice_card)
 
         command_card, command_layout = _card()
-        command_layout.addWidget(_label("ENTRADA MANUAL DE PRUEBA", "eyebrow"))
+        command_layout.addWidget(_label("CONTROL MANUAL PARA LA DEMO", "eyebrow"))
         command_row = QHBoxLayout()
         self.command_input = QLineEdit()
         self.command_input.setPlaceholderText("Escribe un comando de prueba")
@@ -179,7 +180,7 @@ class FaroWindow(QWidget):
 
         root.addWidget(
             _label(
-                "PROTOTIPO ACADÉMICO  ·  DATOS FICTICIOS  ·  SIN CONTROL DE MAQUINARIA",
+                "SAFEFLOW AI / FARO  ·  PLAN Y EQUIPO SIMULADOS  ·  SIN CONTROL DE MAQUINARIA",
                 "footer",
             )
         )
@@ -193,19 +194,31 @@ class FaroWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
         title_card, title_layout = _card()
-        title_layout.addWidget(_label("OPERACIÓN POR TALADRO · SIMULACIÓN", "eyebrow"))
-        title_layout.addWidget(_label("Unidad móvil ficticia", "page-title"))
+        title_layout.addWidget(_label("01 / CONSOLA DEL OPERADOR", "eyebrow"))
+        title_layout.addWidget(_label("Una orden. Un taladro. Un resultado visible.", "page-title"))
         title_layout.addWidget(
-            _label("La malla, el plan y las condiciones son ficticios. Faro no se conecta a maquinaria real.", "caption")
+            _label("Consulta el plan, solicita la acción por voz y sigue la respuesta del equipo simulado.", "caption")
         )
         layout.addWidget(title_card)
         self.status_card, status_layout = _card()
-        status_layout.addWidget(_label("ESTADO DEL SIMULADOR", "eyebrow"))
+        status_layout.addWidget(_label("ESTADO DE LA TAREA", "eyebrow"))
         self.workflow_status = _label("Sin taladro seleccionado", "hero")
         status_layout.addWidget(self.workflow_status)
         self.workflow_detail = _label("Seleccione un taladro de la malla ficticia para comenzar.", "caption")
         status_layout.addWidget(self.workflow_detail)
         layout.addWidget(self.status_card)
+        stage_card, stage_layout = _card()
+        stage_layout.addWidget(_label("SECUENCIA DE TRABAJO", "eyebrow"))
+        stages = QHBoxLayout()
+        stages.setSpacing(6)
+        self.stage_labels = []
+        for title in ("01 IDENTIFICAR", "02 CONSULTAR", "03 VALIDAR", "04 POSICIONAR", "05 CARGAR"):
+            stage = _label(title, "stage")
+            stage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.stage_labels.append(stage)
+            stages.addWidget(stage, 1)
+        stage_layout.addLayout(stages)
+        layout.addWidget(stage_card)
         operation_card, operation_layout = _card()
         operation_layout.addWidget(_label("TALADRO Y PLAN ACTIVO", "eyebrow"))
         self.operation_labels = {}
@@ -237,7 +250,7 @@ class FaroWindow(QWidget):
         zone_layout.addWidget(self.zone_clear_note)
         layout.addWidget(zone_card)
         layout.addStretch(1)
-        return page
+        return self._scroll(page)
 
     def _build_plan_page(self) -> QWidget:
         page = QWidget()
@@ -245,22 +258,34 @@ class FaroWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
         intro, intro_layout = _card()
-        intro_layout.addWidget(_label("MALLA FICTICIA", "eyebrow"))
-        intro_layout.addWidget(_label("Plan de demostración", "page-title"))
+        intro_layout.addWidget(_label("02 / PLAN PRECARGADO", "eyebrow"))
+        self.plan_name_label = _label("Plan de demostración", "page-title")
+        intro_layout.addWidget(self.plan_name_label)
         intro_layout.addWidget(
-            _label("Productos, cantidades, métodos y estados solo pertenecen al simulador.", "caption")
+            _label("Cada ficha representa un taladro de ejemplo. El orden es ilustrativo; no indica posiciones reales.", "caption")
         )
         layout.addWidget(intro)
+        overview, overview_layout = _card()
+        overview_layout.addWidget(_label("AVANCE DEL PLAN", "eyebrow"))
+        self.plan_progress = QProgressBar()
+        self.plan_progress.setTextVisible(True)
+        overview_layout.addWidget(self.plan_progress)
+        self.plan_tiles = QHBoxLayout()
+        self.plan_tiles.setSpacing(8)
+        overview_layout.addLayout(self.plan_tiles)
+        layout.addWidget(overview)
         plan_card, plan_layout = _card()
+        plan_layout.addWidget(_label("DETALLE DE TALADROS · DATOS FICTICIOS", "eyebrow"))
         self.plan_summary = _label("Taladros ficticios", "eyebrow")
         plan_layout.addWidget(self.plan_summary)
         self.plan_list = QListWidget()
         self.plan_list.setAlternatingRowColors(False)
+        self.plan_list.setMaximumHeight(210)
         plan_layout.addWidget(self.plan_list, 1)
-        layout.addWidget(plan_card, 1)
+        layout.addWidget(plan_card)
         layout.addWidget(_label("La lista es informativa. Las órdenes se validan por el motor de reglas.", "caption"))
         layout.addStretch(1)
-        return page
+        return self._scroll(page)
 
     def _build_history_page(self) -> QWidget:
         page = QWidget()
@@ -288,6 +313,14 @@ class FaroWindow(QWidget):
         self.pages.setCurrentIndex(index)
         for button_index, button in enumerate(self.nav_buttons):
             button.setChecked(button_index == index)
+
+    @staticmethod
+    def _scroll(page: QWidget) -> QScrollArea:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(page)
+        return scroll
 
     def _toggle_listening(self) -> None:
         self.listening_toggled.emit(not self._listening)
@@ -353,7 +386,20 @@ class FaroWindow(QWidget):
             self.workflow_detail.setText(str(workflow.get("detail", default_detail)))
             total = workflow.get("total", 0)
             step = workflow.get("step", 0)
-            self.plan_summary.setText(f"{total} taladros ficticios · siguiente posición {step}")
+            self.plan_summary.setText(f"{total} taladros del escenario · siguiente posición {step}")
+
+        operation_state = str(snapshot.get("operation", {}).get("state", "sin_seleccion")) if isinstance(snapshot.get("operation"), Mapping) else "sin_seleccion"
+        stage_index = {
+            "seleccionado": 0, "consultado": 1, "preparado": 2,
+            "confirmacion_pendiente": 3, "movimiento_en_curso": 3,
+            "posicionado": 3, "carga_en_curso": 4, "cargado": 4,
+            "retraccion_en_curso": 4, "retraido": 4, "cerrado": 5,
+        }.get(operation_state, -1)
+        for index, stage in enumerate(self.stage_labels):
+            stage.setProperty("stageState", "done" if index < stage_index else
+                              "current" if index == stage_index else "waiting")
+            stage.style().unpolish(stage)
+            stage.style().polish(stage)
 
         confirmation = snapshot.get("confirmation")
         if isinstance(confirmation, Mapping):
@@ -387,11 +433,31 @@ class FaroWindow(QWidget):
 
         plan = snapshot.get("plan", [])
         if isinstance(plan, (list, tuple)):
+            self.plan_name_label.setText(str(snapshot.get("plan_name") or "Plan de demostración"))
+            available = sum(1 for item in plan if isinstance(item, Mapping)
+                            and item.get("status") != "bloqueado")
+            self.plan_progress.setMaximum(max(available, 1))
+            self.plan_progress.setValue(sum(1 for item in plan if isinstance(item, Mapping)
+                                            and item.get("status") == "completado"))
+            self.plan_progress.setFormat("%v / %m taladros disponibles completados")
+            while self.plan_tiles.count():
+                child = self.plan_tiles.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
             self.plan_list.clear()
             for item in plan:
                 if not isinstance(item, Mapping):
                     continue
                 status = str(item.get("status", "pendiente")).replace("_", " ").upper()
+                tile = QFrame()
+                tile.setObjectName("holeTile")
+                tile.setProperty("holeStatus", str(item.get("status", "pendiente")))
+                tile_layout = QVBoxLayout(tile)
+                tile_layout.setContentsMargins(12, 10, 12, 10)
+                tile_layout.addWidget(_label("TALADRO", "eyebrow"))
+                tile_layout.addWidget(_label(str(item.get("id", "—")), "tile-id"))
+                tile_layout.addWidget(_label(status, "tile-status"))
+                self.plan_tiles.addWidget(tile, 1)
                 row = (
                     f"Taladro {item.get('id', '—')} · {item.get('product', '—')} · "
                     f"{item.get('planned_kg', '—')} kg · {item.get('delivery_method', '—')} · {status}"
@@ -428,22 +494,36 @@ class FaroWindow(QWidget):
     def _style(self) -> None:
         self.setStyleSheet(
             """
-            QWidget { background: #eef1f3; color: #243544; font-family: 'Segoe UI'; font-size: 13px; }
-            QLabel[role='title'] { color: #183a4a; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
-            QLabel[role='subtitle'] { color: #617681; font-size: 12px; }
-            QLabel[role='badge'] { color: #ffffff; background: #315c68; border: 1px solid #315c68;
-                                   padding: 9px 11px; font-size: 11px; font-weight: 700; }
-            QFrame#card { background: #ffffff; border: 1px solid #d5dde2; border-radius: 3px; }
+            QWidget { background: #edf3f5; color: #183246; font-family: 'Segoe UI'; font-size: 13px; }
+            QLabel[role='title'] { color: #102e42; font-size: 23px; font-weight: 800; letter-spacing: 1px; }
+            QLabel[role='subtitle'] { color: #526c7c; font-size: 12px; }
+            QLabel[role='badge'] { color: #ffffff; background: #153e50; border: 1px solid #153e50;
+                                   border-radius: 5px; padding: 9px 14px; font-size: 11px; font-weight: 700; }
+            QFrame#card { background: #ffffff; border: 1px solid #d7e4e9; border-radius: 8px; }
             QFrame#card QLabel { background: transparent; }
-            QFrame#metric { background: #f5f8f9; border: 1px solid #dbe4e8; border-radius: 2px; }
+            QFrame#metric { background: #f3f8fa; border: 1px solid #dbe9ed; border-radius: 5px; }
             QFrame#metric QLabel { background: transparent; }
-            QPushButton[role='nav'] { background: #e3e8eb; color: #627783; border: 1px solid #d4dce1;
-                                      padding: 11px 4px; font-size: 11px; font-weight: 700; }
-            QPushButton[role='nav']:checked { background: #ffffff; color: #183d51;
-                                               border-bottom: 3px solid #2b7779; }
-            QLabel[role='eyebrow'] { color: #56717e; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+            QPushButton[role='nav'] { background: #dfe9ed; color: #536e7d; border: 1px solid #d3e2e7;
+                                      border-radius: 5px; padding: 11px 4px; font-size: 11px; font-weight: 700; }
+            QPushButton[role='nav']:checked { background: #ffffff; color: #0f5167;
+                                               border-bottom: 3px solid #e59a36; }
+            QLabel[role='eyebrow'] { color: #4a7182; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
             QLabel[role='page-title'] { color: #1d3544; font-size: 22px; font-weight: 700; }
             QLabel[role='hero'] { font-size: 25px; font-weight: 700; color: #183a4a; }
+            QFrame#card QLabel[role='stage'] { color: #78919b; background: #ecf2f4; border: 1px solid #e0ebee;
+                                    border-radius: 5px; padding: 9px 2px; font-size: 10px; font-weight: 700; }
+            QFrame#card QLabel[role='stage'][stageState='current'] { color: #714408; background: #fff1d8; border-color: #eab662; }
+            QFrame#card QLabel[role='stage'][stageState='done'] { color: #0e665c; background: #dff4ed; border-color: #a9dfce; }
+            QFrame#holeTile { background: #f1f7f8; border: 1px solid #d9e9ec; border-radius: 6px; }
+            QFrame#holeTile[holeStatus='activo'] { background: #fff4e2; border: 2px solid #e59a36; }
+            QFrame#holeTile[holeStatus='completado'] { background: #e5f5ef; border-color: #9dd7bf; }
+            QFrame#holeTile[holeStatus='bloqueado'] { background: #f9ecea; border-color: #eac5bd; }
+            QFrame#holeTile QLabel { background: transparent; }
+            QLabel[role='tile-id'] { color: #163d50; font-size: 27px; font-weight: 800; }
+            QLabel[role='tile-status'] { color: #56717e; font-size: 10px; font-weight: 700; }
+            QProgressBar { background: #e6eff2; border: 0; border-radius: 5px; height: 12px;
+                           text-align: center; color: #17394a; font-size: 10px; }
+            QProgressBar::chunk { background: #2d9285; border-radius: 5px; }
             QLabel[role='metric-value'] { font-size: 22px; font-weight: 700; color: #183a4a; }
             QLabel[role='value'] { font-size: 16px; font-weight: 600; }
             QLabel[role='caption'] { color: #627783; font-size: 12px; }
@@ -452,9 +532,9 @@ class FaroWindow(QWidget):
                                             font-size: 10px; font-weight: 700; }
             QLabel[role='decision-state'][outcome='accepted'] { color: #1f6b50; background: #e0f1e8; }
             QLabel[role='decision-state'][outcome='rejected'] { color: #a54131; background: #fae8e4; }
-            QPushButton { background: #315c6d; color: white; border: 1px solid #315c6d; border-radius: 3px;
+            QPushButton { background: #1b5269; color: white; border: 1px solid #1b5269; border-radius: 5px;
                           padding: 9px 11px; font-weight: 700; }
-            QPushButton:hover { background: #254b5c; }
+            QPushButton:hover { background: #123f52; }
             QPushButton[listening='true'] { background: #a14e3d; border-color: #a14e3d; }
             QLineEdit { background: #ffffff; border: 1px solid #b8c9d2; border-radius: 3px; padding: 9px;
                         selection-background-color: #2e7274; }
@@ -463,5 +543,6 @@ class FaroWindow(QWidget):
             QListWidget { background: #ffffff; border: 1px solid #dae2e5; outline: 0; }
             QListWidget::item { padding: 7px 5px; border-bottom: 1px solid #e1e7ea; }
             QListWidget::item:selected { background: #dfe9eb; color: #243544; }
+            QScrollArea { background: transparent; border: none; }
             """
         )

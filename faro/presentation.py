@@ -48,6 +48,7 @@ def build_snapshot(controller: FaroController, ui_state: Mapping[str, Any]) -> d
             "state": state,
         },
         "plan": plan_rows,
+        "plan_name": controller.plan.name,
         "zone_clear": bool(ui_state["zone_clear"]) and controller.zone_clear_available,
         "zone_clear_enabled": (controller.zone_clear_available
                                and not controller.confirmation_pending
