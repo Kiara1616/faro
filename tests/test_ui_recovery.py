@@ -92,6 +92,6 @@ def test_next_step_after_validation_points_to_movement(qt_app):
         "state": "preparado", "hole_id": "101", "product": "producto alfa",
         "planned_kg": 100, "delivery_method": "brazo", "plan_validated": True,
     }})
-    assert "Simular zona despejada" in window.next_command.text()
+    assert "Zona despejada · simulación" in window.next_command.text()
     assert "extender brazo" in window.next_command.text()
     window.close()

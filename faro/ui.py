@@ -363,7 +363,7 @@ class FaroWindow(QWidget):
                 "seleccionado": "Oye Faro, consultar plan",
                 "consultado": "Oye Faro, preparar carga",
                 "preparado": (
-                    f"Marca «Simular zona despejada» y di: Oye Faro, extender {method}"
+                    f"Marca «Zona despejada · simulación» y di: Oye Faro, extender {method}"
                     if operation_data.get("plan_validated") else
                     f"Oye Faro, validar {operation_data.get('product') or 'producto alfa'}, {operation_data.get('planned_kg') or '100'} kilos"
                 ),
