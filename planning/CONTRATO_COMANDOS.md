@@ -8,7 +8,7 @@ La entrada es `{source: voice|text, transcript, session_id, timestamp}`. `voice`
 
 F-07 añade una frontera obligatoria antes del motor: `Session(session_id, operator_label, mode, listening, generation)`. La etiqueta de operador es ficticia y no es autenticación biométrica. `voice` exige `mode=VOZ`, `listening=true` y la misma `generation` de captura; una respuesta de un hilo antiguo se rechaza. `text` es una entrada manual de prueba explícita y no enciende el micrófono. Cambiar a `MANUAL` o `DESHABILITADO` apaga la escucha y aumenta la generación; cambiar de modo mientras existe una acción pendiente se rechaza.
 
-El parser puede quitar el prefijo inicial «Oye Faro» o «Faro» únicamente si la escucha ya fue activada por botón/F8. Normaliza mayúsculas, espacios y acentos, pero conserva transcripción original en auditoría. Solo admite variantes enumeradas; no usa similitud, LLM ni valores inferidos. Una frase con dos intenciones, negación o palabras adicionales de acción se rechaza completa.
+La puerta de voz de `app.py` exige «Oye Faro» al inicio de cada orden hablada. El operador puede decirlo junto con la orden o decirlo solo y dar una orden dentro de seis segundos. Las transcripciones sin prefijo se descartan antes del parser y no se guardan en la bitácora. La frase no activa la captura desde reposo: el micrófono se controla con botón/F8 y Vosk procesa audio localmente mientras está activo. Después de quitar el prefijo, el parser normaliza mayúsculas, espacios y acentos; solo admite variantes enumeradas, no usa similitud, LLM ni valores inferidos. Una frase con dos intenciones, negación o palabras adicionales de acción se rechaza completa.
 
 ## Datos y estados comunes
 

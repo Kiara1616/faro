@@ -135,7 +135,7 @@ class FaroWindow(QWidget):
         self.voice_button = QPushButton("Activar escucha  ·  F8")
         self.voice_button.clicked.connect(self._toggle_listening)
         voice_layout.addWidget(self.voice_button)
-        voice_layout.addWidget(_label("Con la escucha activa: «Oye Faro, consultar estado». La frase no enciende el micrófono.", "caption"))
+        voice_layout.addWidget(_label("Con la escucha activa, di «Oye Faro» antes de la orden. Faro descarta transcripciones sin esa frase.", "caption"))
         sidebar.addWidget(voice_card)
 
         command_card, command_layout = _card()

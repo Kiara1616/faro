@@ -251,12 +251,12 @@
 ### F-09 · Vocabulario de Faro y análisis de números
 
 **Objetivo:** tener órdenes cortas y pronunciables para el caso real.
-**Trabajo:** fijar frases canónicas y variantes limitadas; reconocer IDs de taladro y kilos en palabras o cifras sin inferir valores ambiguos. Permitir `Oye Faro` como prefijo con escucha activa. Reservar una frase de activación continua para investigación posterior.
+**Trabajo:** fijar frases canónicas y variantes limitadas; reconocer IDs de taladro y kilos en palabras o cifras sin inferir valores ambiguos. Exigir `Oye Faro` al inicio de cada orden hablada durante la escucha activa. Reservar una frase de activación desde reposo para investigación posterior.
 **Cierre:** tabla de al menos 20 frases positivas y 30 negativas; cada frase esperada tiene intención/argumentos inequívocos; valores dudosos se rechazan.
 
 **Entregable verificable:** Parser determinista y tabla de al menos 20 frases positivas y 30 negativas.
 
-**Criterios de aceptación detallados:** Cada positivo da intención y argumentos exactos; negación, dos acciones, valor dudoso, unidad faltante o frase ajena se rechazan; Oye Faro solo es prefijo con escucha activa.
+**Criterios de aceptación detallados:** Cada positivo da intención y argumentos exactos; negación, dos acciones, valor dudoso, unidad faltante o frase ajena se rechazan; la puerta de voz ignora frases sin el prefijo inicial `Oye Faro` y no enciende la captura desde reposo.
 
 **Evidencia para cerrar:** Tests parametrizados de acentos, cifras/palabras, IDs, kg, unidades y negativos.
 

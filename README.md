@@ -54,7 +54,7 @@ $env:FARO_AUDIO_DEVICE="5"  # sustituir por el índice correcto
 
 La tecla **F8** también activa o detiene la escucha. Es un control de prueba; no equivale a una activación por voz validada.
 
-Con la escucha ya activa, se puede anteponer **«Oye Faro»** o **«Faro»** a un comando permitido; por ejemplo, `Oye Faro, consultar estado`. El motor conserva la frase completa en la bitácora y sigue rechazando comandos fuera de la lista. Decir «Oye Faro» por sí solo **no activa el micrófono**. Una activación continua por frase requiere un detector específico y pruebas con voces reales, ruido y conversaciones ajenas.
+Con la escucha ya activa, Faro espera **«Oye Faro»** antes de aceptar una orden. Se puede decir en una frase (`Oye Faro, consultar estado`) o decir primero «Oye Faro» y dar la orden siguiente dentro de seis segundos. Mientras espera, Vosk sigue procesando el audio localmente para detectar la frase de activación; las transcripciones sin el prefijo se ignoran y no se agregan a la bitácora. La escucha se activa y desactiva manualmente con el botón o F8.
 
 ## Guion corto de demostración
 

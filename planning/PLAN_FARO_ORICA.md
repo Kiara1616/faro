@@ -24,7 +24,7 @@ El prototipo **no actuará sobre una MMU, PLC, LOADPlus o ProBlast real**. La co
 
 ## Alcance funcional congelado para v1
 
-**Incluido:** operador ficticio en sesión; plan de malla de prueba; consulta de taladro; comandos cerrados de brazo/manguera; cantidad y mezcla contrastadas con el plan; carguío y pausa **simulados**; avance al siguiente taladro; alertas; bitácora; modo manual simulado; reconocimiento local activado con botón/F8; «Oye Faro» como prefijo opcional con la escucha activa; respuesta visible y, si pasa las pruebas, voz local breve.
+**Incluido:** operador ficticio en sesión; plan de malla de prueba; consulta de taladro; comandos cerrados de brazo/manguera; cantidad y mezcla contrastadas con el plan; carguío y pausa **simulados**; avance al siguiente taladro; alertas; bitácora; modo manual simulado; reconocimiento local activado con botón/F8; «Oye Faro» obligatorio antes de cada orden hablada; respuesta visible y, si pasa las pruebas, voz local breve.
 
 **Fuera de v1:** conexión a maquinaria, PLC o sensores reales; envío por LoRa; autenticación biométrica por voz; modificación automática de un plan real; aceptación libre de frases mediante LLM; prometer que «Oye Faro» despierta el micrófono continuamente; afirmar aprobación o nivel de seguridad industrial.
 
@@ -76,7 +76,7 @@ Si son menos de cuatro personas, agrupar producto con interfaz y lógica con int
 1. Sustituir el modelo de «revisión auxiliar» por `malla`, `taladro`, `producto`, `kg previstos`, `modo de entrega`, `estado de brazo/manguera` y `estado de carguío`.
 2. Fijar la tabla de comandos e interbloqueos ficticios en un documento antes de editar código. Las acciones sobre brazo/manguera se aceptan solo en estados válidos; cantidad/mezcla se comparan con el plan.
 3. Construir y probar el motor y el simulador por teclado. El adaptador simulado emite confirmación tardía y fallos para impedir que la UI confunda recepción con ejecución.
-4. Conectar Vosk local al nuevo vocabulario. Mantener botón/F8 para activar escucha. «Oye Faro» solo precede un comando cuando el micrófono ya está activo.
+4. Conectar Vosk local al nuevo vocabulario. Mantener botón/F8 para activar y detener escucha. Exigir «Oye Faro» al inicio de cada orden; la frase no activa el micrófono desde reposo.
 5. Rediseñar la consola para una operación por taladro: identificación visible, plan, estado actual, modo, orden escuchada, resultado y registro.
 6. Ejecutar ensayos adversos, grabar métricas y preparar el pitch con lo que realmente funciona.
 
@@ -101,7 +101,7 @@ Si no llega respuesta, continuar con **malla y sensores ficticios**, etiquetados
 | Riesgo | Mitigación verificable |
 | --- | --- |
 | Reconocimiento erróneo de kilos o mezcla | Gramática cerrada, lectura de vuelta del valor, comparación con el plan y bloqueo ante discrepancia. |
-| Activación por conversación ajena | Escucha explícita; prefijo opcional no se considera autenticación; corpus de frases negativas. |
+| Activación por conversación ajena | Exigir el prefijo «Oye Faro» durante escucha explícita; descartar frases sin él; no considerarlo autenticación ni activación desde reposo. Probar frases negativas. |
 | Movimiento con persona próxima | Interbloqueo ficticio y escenario de rechazo. Un sensor real exigiría interfaz y validación de ORICA. |
 | Falta de información de PLC | Adaptador simulado; interfaz interna documentada; ninguna promesa de compatibilidad. |
 | Equipo pequeño y tiempo corto | Trabajo paralelo desde el 3 de noviembre, contrato estable entre módulos, integración diaria y revisión de bloqueos. TTS y wake word continuo siguen fuera del alcance definido de v1; no se elimina ninguna función incluida. |

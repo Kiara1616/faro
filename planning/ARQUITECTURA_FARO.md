@@ -9,8 +9,9 @@ Faro será **una aplicación de escritorio local con un único proceso**. El rec
 
 ```mermaid
 flowchart LR
-    Mic[Micrófono] --> ASR[Vosk local]
-    ASR --> Parser[Analizador de comandos]
+    Mic[Micrófono] --> ASR[Vosk local reconoce audio]
+    ASR --> Wake[Filtro de frase «Oye Faro»]
+    Wake --> Parser[Analizador de comandos]
     Teclado[Entrada manual de prueba] --> Parser
     Parser --> Reglas[Motor de estados y reglas]
     Plan[Malla ficticia local] --> Reglas
@@ -37,6 +38,8 @@ La frontera crítica está entre **texto reconocido** y **solicitud validada**. 
 
 Las versiones usadas localmente al revisar este plan son PySide6 Essentials 6.12.0, Vosk 0.3.45, sounddevice 0.5.6 y pytest 9.1.1. Antes de la entrega se fijarán versiones compatibles y se repetirá la instalación desde cero.
 
+Con la captura activada manualmente, Vosk continúa procesando el audio localmente para reconocer «Oye Faro». La puerta de voz descarta las transcripciones sin ese prefijo antes de que lleguen al parser o a la bitácora. La frase no activa el micrófono por sí sola; una activación de espera de bajo consumo queda fuera de v1.
+
 ## Docker y Go: decisión explícita
 
 ### Docker
@@ -50,7 +53,7 @@ Las versiones usadas localmente al revisar este plan son PySide6 Essentials 6.12
 ### Otras tecnologías consideradas
 
 - **LLM local:** reservado, si aporta valor, para ayuda o consulta de documentación; nunca como autoridad de control. No es requisito de v1.
-- **Wake word permanente:** «Oye Faro» funciona como prefijo cuando la escucha está activada. Un detector permanente requiere pruebas de falsas activaciones y convivencia con conversaciones de cabina. No es requisito de v1.
+- **Prefijo obligatorio en voz:** cada orden hablada debe empezar con «Oye Faro», ya sea en la misma frase o seguido por una orden dentro de seis segundos. «Faro» solo y los prefijos dentro de una frase no activan órdenes. Un detector que encienda el micrófono desde reposo queda fuera de v1 y requeriría pruebas de falsas activaciones.
 - **TTS local:** útil solo para confirmaciones breves después de probar inteligibilidad; la pantalla sigue mostrando el estado.
 - **LoRa, nube, Bluetooth y servidor web:** no se necesitan para la ruta de voz local a simulador. El briefing no confirmó una interfaz física para estos canales.
 - **PostgreSQL o microservicios:** no aportan al prototipo de una sola laptop y crean dependencias de red/operación.

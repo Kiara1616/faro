@@ -21,6 +21,7 @@ from faro.presentation import build_snapshot
 from faro.scenarios import load_scenarios
 from faro.ui import FaroWindow
 from faro.voice import VoiceRecognizer
+from faro.wake_word import WakeCommandGate
 
 
 ROOT = Path(__file__).resolve().parent
@@ -62,13 +63,32 @@ def main() -> int:
         "history": [],
         "zone_clear": False,
     }
+    wake_gate = WakeCommandGate(command_window_seconds=6.0)
     voice_error_detail: str | None = None
 
     def render() -> None:
         window.render_state({**ui_state, **build_snapshot(controller, ui_state)})
 
+    def expire_wake_window() -> None:
+        if wake_gate.expire():
+            ui_state["voice_status"] = "Micrófono activo; espera «Oye Faro»."
+            ui_state["command_status"] = "en espera de frase de activación"
+            render()
+
     def handle_command(text: str, source: str = "text", generation: int | None = None) -> None:
         input_source = Source.VOICE if source == "voice" else Source.TEXT
+        if input_source is Source.VOICE:
+            wake = wake_gate.consume(text)
+            if wake.status == "ignored":
+                return
+            if wake.status == "activated":
+                ui_state["voice_status"] = "Faro activado. Di una orden en los próximos 6 segundos."
+                ui_state["command_status"] = "esperando orden por voz"
+                render()
+                QTimer.singleShot(6_100, expire_wake_window)
+                return
+            text = wake.command or ""
+            ui_state["voice_status"] = "Micrófono activo; di «Oye Faro» para otra orden."
         if input_source is Source.VOICE and generation is None:
             generation = domain.session.generation if domain.session else None
         result = controller.process(text, source=input_source, generation=generation,
@@ -108,20 +128,26 @@ def main() -> int:
             if domain.session is None or not domain.session.listening:
                 domain.set_listening(session_id, True)
         elif status == "error":
+            wake_gate.reset()
             voice_error_detail = detail or "Micrófono no disponible."
             ui_state["listening"] = False
             domain.set_listening(session_id, False)
             if domain.pending is None:
                 domain.set_mode(session_id, Mode.MANUAL)
         elif status == "stopped":
+            wake_gate.reset()
             ui_state["listening"] = False
             domain.set_listening(session_id, False)
-        ui_state["voice_status"] = (voice_error_detail if status == "stopped" and voice_error_detail
-                                     else detail or status)
+        if status == "listening":
+            ui_state["voice_status"] = "Micrófono activo; espera «Oye Faro»."
+        else:
+            ui_state["voice_status"] = (voice_error_detail if status == "stopped" and voice_error_detail
+                                         else detail or status)
         render()
 
     def toggle_voice(activate: bool) -> None:
         if activate:
+            wake_gate.reset()
             if not domain.set_mode(session_id, Mode.VOZ) or not domain.set_listening(session_id, True):
                 ui_state["voice_status"] = "No se puede activar voz durante una acción o sesión inválida."
             else:
@@ -133,6 +159,7 @@ def main() -> int:
                     domain.set_mode(session_id, Mode.MANUAL)
                     ui_state["voice_status"] = "El micrófono ya está iniciándose."
         else:
+            wake_gate.reset()
             voice.stop(timeout=0.5)
             domain.set_listening(session_id, False)
             domain.set_mode(session_id, Mode.MANUAL)
