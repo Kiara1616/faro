@@ -34,6 +34,17 @@ def test_manual_recovery_button_is_disabled_until_review(qt_app):
     window.close()
 
 
+def test_recovery_uses_operational_state_after_status_text_changes(qt_app):
+    window = FaroWindow()
+    window.render_state({"operation": {"state": "resultado_desconocido"},
+                         "command_status": "condición ficticia de demostración"})
+    assert window.recovery_button.isEnabled()
+    window.render_state({"operation": {"state": "fallo"},
+                         "command_status": "ejecución: timeout"})
+    assert not window.recovery_button.isEnabled()
+    window.close()
+
+
 def test_console_contract_keeps_simulation_and_plan_context_visible(qt_app):
     window = FaroWindow()
     window.render_state({

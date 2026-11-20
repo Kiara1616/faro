@@ -6,6 +6,7 @@ no industrial connectors, network control endpoints, or physical outputs.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import os
 from pathlib import Path
 import sys
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import QApplication
 from faro.controller import FaroController
 from faro.domain import Mode, Source
 from faro.plan import load_demo_plan
+from faro.presentation import build_snapshot
 from faro.scenarios import load_scenarios
 from faro.ui import FaroWindow
 from faro.voice import VoiceRecognizer
@@ -37,7 +39,9 @@ def main() -> int:
     scenarios = load_scenarios(ROOT / "fixtures" / "escenarios_demo.json")
     scenario_name = os.environ.get("FARO_SCENARIO", "normal")
     selected_scenario = scenarios.get(scenario_name, scenarios["normal"])
-    controller = FaroController.create(plan, ROOT / "faro-audit.sqlite3", scenario=selected_scenario)
+    audit_path = ROOT / "data" / "faro-audit.sqlite3"
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    controller = FaroController.create(plan, audit_path, scenario=selected_scenario)
     domain = controller.domain
     session_id = "demo-session"
     window = FaroWindow()
@@ -56,35 +60,19 @@ def main() -> int:
         "voice_status": "Micrófono inactivo",
         "command_status": "en espera",
         "history": [],
+        "zone_clear": False,
     }
     voice_error_detail: str | None = None
 
-    def snapshot() -> dict:
-        hole = domain.selected_hole
-        return {"operation": {"hole_id": hole.id if hole else None,
-                               "product": hole.product if hole else None,
-                               "planned_kg": hole.planned_kg if hole else None,
-                               "delivery_method": hole.delivery_method if hole else None,
-                               "scenario": controller.scenario_name,
-                               "state": domain.state.value},
-                "session": domain.session_snapshot(),
-                "workflow": {"active": domain.state.value not in {"sin_seleccion", "cerrado"},
-                             "status": domain.state.value, "label": domain.state.value,
-                             "total": len(plan.holes), "step": len(domain.completed_holes) + 1,
-                             "scenario": controller.scenario_name},
-                "confirmation": controller.confirmation_snapshot(),
-                "history": ui_state["history"],
-                "alert": vars(domain.alert) if domain.alert else None}
-
     def render() -> None:
-        window.render_state({**snapshot(), **ui_state})
+        window.render_state({**ui_state, **build_snapshot(controller, ui_state)})
 
     def handle_command(text: str, source: str = "text", generation: int | None = None) -> None:
         input_source = Source.VOICE if source == "voice" else Source.TEXT
         if input_source is Source.VOICE and generation is None:
             generation = domain.session.generation if domain.session else None
         result = controller.process(text, source=input_source, generation=generation,
-                                    zone_clear=False)
+                                    zone_clear=ui_state["zone_clear"])
         ui_state["transcript"] = text
         if result.decision is None:
             accepted, intent, reason = False, result.parsed.intent or "desconocido", result.parsed.reason
@@ -95,7 +83,18 @@ def main() -> int:
         ui_state["decision"] = reason
         ui_state["history"].append({"transcript": text, "intent": intent,
                                     "accepted": accepted, "decision": reason,
-                                    "state": domain.state.value})
+                                    "state": domain.state.value,
+                                    "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+        render()
+
+    def handle_zone_clear(enabled: bool) -> None:
+        ui_state["zone_clear"] = bool(enabled) and controller.zone_clear_available
+        ui_state["decision"] = (
+            "Zona marcada como despejada para esta simulación. No proviene de un sensor."
+            if ui_state["zone_clear"] else
+            "La zona simulada permanece ocupada; los movimientos serán rechazados."
+        )
+        ui_state["command_status"] = "condición ficticia de demostración"
         render()
 
     def handle_voice_status(status: str, detail: str, generation: int | None = None) -> None:
@@ -150,6 +149,7 @@ def main() -> int:
     window.command_submitted.connect(handle_command)
     window.listening_toggled.connect(toggle_voice)
     window.recovery_requested.connect(recover_unknown)
+    window.zone_clear_toggled.connect(handle_zone_clear)
     events.result.connect(lambda text, generation: handle_command(
         text, source="voice", generation=generation))
     events.status.connect(handle_voice_status)

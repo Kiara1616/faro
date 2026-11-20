@@ -12,7 +12,7 @@ El trabajo del equipo se coordina en los [issues del repositorio privado](https:
   sesión, modo, estado de ejecución, alertas y bitácora.
 - Comandos de voz en español reconocidos sin Internet mediante Vosk, activados explícitamente por el usuario.
 - El mismo motor determinista para comandos hablados o escritos: lista cerrada, contexto de tarea, rechazo de órdenes ambiguas y bloqueo ante discrepancias.
-- Bitácora local en SQLite (`data/decisions.sqlite3`), además de historial visible. No guarda audio crudo.
+- Bitácora local en SQLite (`data/faro-audit.sqlite3`), además de historial visible. No guarda audio crudo.
 
 ## Preparación en Windows
 
@@ -54,13 +54,13 @@ $env:FARO_AUDIO_DEVICE="5"  # sustituir por el índice correcto
 
 La tecla **F8** también activa o detiene la escucha. Es un control de prueba; no equivale a una activación por voz validada.
 
-Con la escucha ya activa, se puede anteponer **«Oye Faro»** o **«Faro»** a un comando permitido; por ejemplo, `Oye Faro, mostrar estado`. El motor conserva la frase completa en la bitácora y sigue rechazando comandos fuera de la lista. Decir «Oye Faro» por sí solo **no activa el micrófono**. Una activación continua por frase requiere un detector específico y pruebas con voces reales, ruido y conversaciones ajenas.
+Con la escucha ya activa, se puede anteponer **«Oye Faro»** o **«Faro»** a un comando permitido; por ejemplo, `Oye Faro, consultar estado`. El motor conserva la frase completa en la bitácora y sigue rechazando comandos fuera de la lista. Decir «Oye Faro» por sí solo **no activa el micrófono**. Una activación continua por frase requiere un detector específico y pruebas con voces reales, ruido y conversaciones ajenas.
 
 ## Guion corto de demostración
 
 1. Seleccionar el taladro `101` y consultar su plan ficticio.
 2. Preparar la carga y validar producto `alfa` y `cien kilos` contra el plan.
-3. Solicitar `extender brazo`, confirmar y observar `aceptada → en curso → completada`.
+3. Marcar **Simular zona despejada**, solicitar `extender brazo`, confirmar y observar `aceptada → en curso → completada`.
 4. Solicitar `iniciar carga`, confirmar, retraer y cerrar el taladro.
 5. Avanzar al taladro `102` y repetir con `beta` y `ciento veinte kilos`.
 6. Repetir con `FARO_SCENARIO=fallo_brazo`: el movimiento termina en `fallo`, no se marca cargado y queda auditado.
@@ -76,7 +76,9 @@ Todos los datos son ficticios y no representan especificaciones industriales.
 | Motor contextual | Lista de comandos, secuencia, contraste y rechazos | Python, reglas explícitas |
 | Integración | Eventos entre hilos, arranque, datos locales y pruebas | Señales Qt, SQLite, pytest |
 
-La UI solo emite intenciones. `faro/core.py` decide si cada una procede. `faro/voice.py` trabaja en un hilo y `app.py` entrega sus resultados al hilo de la interfaz mediante señales Qt.
+La interfaz emite órdenes y muestra snapshots. `faro/controller.py` coordina el flujo; `faro/voice_pipeline.py` conecta el parser con `faro/domain.py`; el dominio valida estados y reglas; `faro/simulator.py` devuelve eventos; y `faro/audit.py` conserva decisiones y resultados en SQLite. `faro/presentation.py` prepara el estado visible sin depender de Qt. `faro/voice.py` captura audio en un hilo y `app.py` entrega sus callbacks a Qt mediante señales.
+
+La primera máquina de estados de revisión auxiliar se conserva en `faro/legacy/indicator_review.py` con sus pruebas en `tests/legacy/`. No forma parte de la aplicación Faro actual.
 
 ## IA local y límites de seguridad
 
@@ -102,14 +104,14 @@ modelo local y repite los gates antes de eliminarla.
 
 Antes del pitch: probar el micrófono y EPP reales, con varias voces y ruido representativo; medir comandos correctos, rechazos y activaciones accidentales; ensayar sin Internet. El reconocimiento con audio de prueba **no demuestra rendimiento en una operación minera**.
 
-El briefing de ORICA ya ubicó el caso de uso en el carguío por taladro desde una unidad móvil. El siguiente paso es reemplazar la revisión auxiliar ficticia por un flujo simulado de malla, taladro, brazo o manguera y cierre de carguío. Siguen pendientes el modelo concreto del equipo, las órdenes autorizables, las reglas de excepción y cualquier interfaz técnica para un piloto futuro.
+El briefing de ORICA ubicó el caso de uso en el carguío por taladro desde una unidad móvil, y Faro v1 ya representa ese flujo en un simulador. Siguen pendientes la validación con operadores, las condiciones reales de voz y EPP, el modelo concreto del equipo, las órdenes autorizables, las reglas de excepción y cualquier interfaz técnica para un piloto futuro.
 
 ## Evaluación reproducible de la voz
 
-`scripts/evaluate_voice.py` lee un CSV de casos etiquetados y archivos WAV PCM mono a 16 kHz/16 bits. Informa transcripción exacta, latencia de inferencia, aceptación correcta y falsas aceptaciones para órdenes negativas. Un CSV de ejemplo usa columnas `wav,expected_text,expected_accept,setup_commands`; en `setup_commands` se separan comandos de preparación con `|`. Los archivos WAV se guardan en la misma carpeta del CSV o se indican mediante rutas relativas.
+`scripts/evaluate_voice.py` lee un CSV de casos etiquetados y archivos WAV PCM mono a 16 kHz/16 bits. Informa transcripción exacta, latencia de inferencia, aceptación según el parser y el dominio activos, y falsas aceptaciones por condición. No simula la confirmación del controlador ni el resultado de la MMU. Un CSV usa `wav,expected_text,expected_accept,setup_commands`; `setup_commands` separa órdenes de preparación con `|`, y `zone_clear` puede marcar una señal ficticia para evaluar un movimiento. Los archivos WAV se guardan junto al CSV o se indican mediante rutas relativas.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\evaluate_voice.py work\casos.csv --output work\resultado-voz.json
 ```
 
-No se deben interpretar resultados de audio sintético como desempeño con ruido minero, EPP o voces de operadores. «Oye Faro, mostrar estado» se transcribió correctamente con dos voces sintéticas en audio limpio. Por ahora la escucha se activa explícitamente.
+No se deben interpretar resultados de audio sintético como desempeño con ruido minero, EPP o voces de operadores. Una evaluación previa del prototipo transcribió «Oye Faro, mostrar estado» con dos voces sintéticas en audio limpio; esa medición no valida el flujo actual. Por ahora la escucha se activa explícitamente.

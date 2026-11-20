@@ -1,6 +1,6 @@
 # Faro — arquitectura técnica y decisiones de tecnología
 
-**Estado:** propuesta para entregar el prototipo completo el 10 de noviembre de 2026.
+**Estado:** arquitectura del prototipo de simulación implementado; no describe una integración industrial.
 **Alcance:** simulador de una unidad móvil de fabricación y carguío (MMU) basado en el briefing de ORICA. Ningún componente controla maquinaria real.
 
 ## Decisión principal
@@ -65,21 +65,30 @@ Las versiones usadas localmente al revisar este plan son PySide6 Essentials 6.12
 
 **Auditoría:** guardar entrada, interpretación, decisión, inicio, fin/fallo y motivo con marcas de tiempo y `command_id`; no guardar audio por defecto. Los IDs y cantidades del plan son ficticios.
 
-## Estructura propuesta del código
+## Estructura activa del código
 
 ```text
+app.py                         composición de la aplicación Qt
 faro/
-  domain/         modelos, estados y reglas sin Qt ni audio
-  speech/         captura, ASR y análisis de frases
-  adapters/       contrato + simulador de MMU
-  storage/        malla ficticia y bitácora SQLite
-  presentation/   consola PySide6 y mensajes
-tests/            dominio, adaptador, integración y corpus
-scripts/          instalación del modelo, evaluación, arranque
-planning/         decisiones, hitos, issues y arquitectura
+  controller.py                 coordinación de entradas, confirmación y eventos
+  domain.py                     estados, sesión y reglas del flujo por taladro
+  parser.py                     interpretación de vocabulario cerrado
+  voice_pipeline.py             conexión parser-dominio
+  voice.py                      captura y reconocimiento local
+  simulator.py                  adaptador ficticio de MMU
+  plan.py, scenarios.py         fixtures y escenarios de demostración
+  audit.py                      persistencia SQLite
+  ui.py                         presentación, navegación y entrada manual
+  presentation.py               snapshot de operación para la interfaz
+  messages.py                   textos de estado y ejecución
+  legacy/
+    indicator_review.py         experimento anterior, fuera del runtime
+tests/                          pruebas agrupadas por módulo y legacy/
+scripts/                        instalación, diagnóstico, evaluación y validación
+planning/                       decisiones, evidencia y guía de entrega
 ```
 
-La estructura actual (`faro/core.py`, `voice.py`, `ui.py`) puede evolucionar hacia estos módulos **a medida que se sustituya la revisión auxiliar**. No conviene reorganizar archivos solo por estética antes de tener el dominio nuevo.
+La aplicación activa sigue el flujo `app.py → FaroController → VoicePipeline/Parser → FaroDomain → SimulatedMMU → AuditStore`. La UI solo renderiza snapshots y emite entradas; el simulador y el dominio no dependen de Qt ni del micrófono. El motor inicial de revisión auxiliar y sus pruebas están aislados bajo `legacy/` para que no se confundan con el producto del reto.
 
 ## Distribución y control de calidad
 

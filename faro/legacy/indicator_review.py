@@ -1,7 +1,7 @@
-"""Deterministic, simulation-only command engine for the Faro demo.
+"""Retired indicator-review prototype, retained for historical reference.
 
-The readings and workflow in this module are fictional. No equipment interface,
-industrial protocol, or physical output is exposed.
+This module is not used by the active per-hole Faro application. Its readings
+and workflow are fictional; it has no equipment or industrial interface.
 """
 
 from __future__ import annotations

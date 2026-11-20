@@ -3,7 +3,7 @@
   "simulation_only": true,
   "scenarios": [
     {"name": "normal", "description": "flujo determinista sin fallos", "delay_ticks": 1},
-    {"name": "zona_ocupada", "description": "la coordinación no entrega zone_clear; la orden se rechaza", "delay_ticks": 1},
+    {"name": "zona_ocupada", "description": "la coordinación no entrega zone_clear; la orden se rechaza", "delay_ticks": 1, "zone_clear_available": false},
     {"name": "fallo_brazo", "description": "el movimiento de brazo termina en fallo", "delay_ticks": 1, "fail_actions": ["extender_brazo"]},
     {"name": "demora_timeout", "description": "la respuesta supera el umbral y queda desconocida", "delay_ticks": 10, "timeout_ticks": 2},
     {"name": "adaptador_lento", "description": "demora larga pero completado si no vence", "delay_ticks": 3}

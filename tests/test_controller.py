@@ -4,6 +4,7 @@ import time
 from faro.controller import FaroController
 from faro.domain import Mode, Source, State
 from faro.plan import load_demo_plan
+from faro.presentation import build_snapshot
 from faro.scenarios import load_scenarios
 
 
@@ -61,6 +62,22 @@ def test_rejected_order_never_reaches_simulator_or_marks_success(tmp_path):
     assert controller.domain.state is State.SIN_SELECCION
     row = controller.audit.list_records()[-1]
     assert row["accepted"] == 0 and row["event_status"] is None
+
+
+def test_occupied_scenario_keeps_zone_blocked_even_when_requested(tmp_path):
+    scenarios = load_scenarios(Path(__file__).resolve().parents[1] / "fixtures" / "escenarios_demo.json")
+    controller = FaroController.create(PLAN, tmp_path / "audit.sqlite3",
+                                       scenario=scenarios["zona_ocupada"])
+    for text in ("seleccionar taladro 101", "consultar taladro 101",
+                 "preparar carga", "validar producto alfa, cien kilos"):
+        assert controller.process(text).decision.accepted
+    result = controller.process("extender brazo", zone_clear=True)
+    assert result.decision is not None and not result.decision.accepted
+    assert result.decision.reason == "fictional_zone_occupied"
+    assert not controller.simulator.busy
+    snapshot = build_snapshot(controller, {"zone_clear": True, "history": []})
+    assert snapshot["zone_clear"] is False
+    assert snapshot["zone_clear_enabled"] is False
 
 
 def test_voice_controller_uses_same_rules(tmp_path):

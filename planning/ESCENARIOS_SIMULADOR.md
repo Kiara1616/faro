@@ -7,7 +7,7 @@ son ficticios y no representan señales de una MMU real. Se cargan con
 | Nombre | Propósito | Parámetros |
 |---|---|---|
 | `normal` | Caso base | demora 1 tick, sin fallos |
-| `zona_ocupada` | Verificar fail-closed | la coordinación no pasa `zone_clear` |
+| `zona_ocupada` | Verificar rechazo por zona ficticia ocupada | el escenario fija `zone_clear_available=false`; el controlador rechaza el movimiento aunque se solicite `zone_clear=true` |
 | `fallo_brazo` | Fallo inyectado | `extender_brazo` termina en `failed` |
 | `demora_timeout` | Respuesta no confiable | demora 10, timeout 2; termina en `unknown` |
 | `adaptador_lento` | Demora tolerable | demora 3, sin timeout |
@@ -23,6 +23,6 @@ muestra el nombre del escenario junto al taladro y el registro incorpora el
 escenario en el motivo del evento. Un nombre desconocido vuelve a `normal`; no
 se acepta una configuración no validada.
 
-Verificación automatizada: `tests/test_scenarios.py`; suite actual: 195 pruebas
-(`.venv` con `QT_QPA_PLATFORM=offscreen`; la suite UI también pasa aislada).
+Verificación automatizada: `tests/test_scenarios.py` y pruebas del controlador.
+La suite de UI se ejecuta con `QT_QPA_PLATFORM=offscreen`.
 

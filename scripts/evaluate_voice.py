@@ -23,7 +23,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from faro.core import FaroEngine
 from faro.domain import FaroDomain, Mode, Source
 from faro.plan import load_demo_plan
 from faro.voice_pipeline import VoicePipeline
@@ -56,6 +55,7 @@ def load_cases(csv_path: Path) -> list[dict]:
         for line, row in enumerate(reader, start=2):
             wav_name = (row.get("wav") or "").strip()
             expected_text = (row.get("expected_text") or "").strip()
+            zone_clear = (row.get("zone_clear") or "").strip()
             if not wav_name or not expected_text:
                 raise ValueError(f"Fila {line}: wav y expected_text son obligatorios.")
             cases.append({
@@ -63,6 +63,7 @@ def load_cases(csv_path: Path) -> list[dict]:
                 "expected_text": expected_text,
                 "expected_accept": _parse_bool(row.get("expected_accept") or ""),
                 "setup_commands": [part.strip() for part in (row.get("setup_commands") or "").split("|") if part.strip()],
+                "zone_clear": _parse_bool(zone_clear) if zone_clear else False,
                 "condition": (row.get("condition") or "unspecified").strip() or "unspecified",
                 "speaker": (row.get("speaker") or "unspecified").strip() or "unspecified",
                 "noise": (row.get("noise") or "unspecified").strip() or "unspecified",
@@ -98,54 +99,18 @@ def make_vosk_transcriber(model_path: Path) -> Transcriber:
     return transcribe
 
 
-def evaluate_cases(cases: list[dict], transcribe: Transcriber) -> dict:
-    rows = []
-    for case in cases:
-        engine = FaroEngine()
-        for command in case["setup_commands"]:
-            decision = engine.handle(command)
-            if not decision.accepted:
-                raise ValueError(f"Preparación de caso rechazada ({case['wav']}): {command}: {decision.message}")
-
-        transcript, latency_ms = transcribe(case["wav"])
-        decision = engine.handle(transcript)
-        transcript_correct = _normalize(transcript) == _normalize(case["expected_text"])
-        expected_accept = case["expected_accept"]
-        rows.append({
-            "wav": str(case["wav"]),
-            "expected_text": case["expected_text"],
-            "transcript": transcript,
-            "transcript_correct": transcript_correct,
-            "expected_accept": expected_accept,
-            "accepted": decision.accepted,
-            "false_accept": not expected_accept and decision.accepted,
-            "intent": decision.intent,
-            "reason": decision.message,
-            "recognition_latency_ms": latency_ms,
-        })
-
-    negatives = sum(not row["expected_accept"] for row in rows)
-    false_accepts = sum(row["false_accept"] for row in rows)
-    total = len(rows)
-    summary = {
-        "cases": total,
-        "exact_transcriptions": sum(row["transcript_correct"] for row in rows),
-        "exact_transcription_rate": round(sum(row["transcript_correct"] for row in rows) / total, 4),
-        "decision_accuracy": round(sum(row["accepted"] == row["expected_accept"] for row in rows) / total, 4),
-        "forbidden_cases": negatives,
-        "false_accepts": false_accepts,
-        "false_accept_rate": round(false_accepts / negatives, 4) if negatives else None,
-        "mean_recognition_latency_ms": round(sum(row["recognition_latency_ms"] for row in rows) / total, 1),
-    }
-    return {"summary": summary, "cases": rows}
+def evaluate_cases(cases: list[dict], transcribe: Transcriber,
+                   plan_path: Path | None = None) -> dict:
+    """Evaluate ASR output against Faro's active parser and domain rules."""
+    return evaluate_pipeline_cases(cases, transcribe, plan_path)
 
 
 def evaluate_pipeline_cases(cases: list[dict], transcribe: Transcriber, plan_path: Path | None = None) -> dict:
-    """Evaluate the current parser/domain boundary with a local transcriber.
+    """Evaluate the active parser/domain boundary with a local transcriber.
 
-    This keeps the legacy evaluator available while ensuring F-11 measures the
-    same session-protected path used by Faro v1. Audio is read only by the
-    injected transcriber; this function never saves or uploads it.
+    This reports recognition and domain acceptance, not execution through the
+    controller or simulated MMU. Audio is read only by the injected
+    transcriber; this function never saves or uploads it.
     """
     plan = load_demo_plan(plan_path or PROJECT_ROOT / "fixtures" / "malla_demo.json")
     rows = []
@@ -166,8 +131,8 @@ def evaluate_pipeline_cases(cases: list[dict], transcribe: Transcriber, plan_pat
         decision = result.decision
         accepted = bool(decision and decision.accepted)
         rows.append({
-            "wav": str(case["wav"]), "condition": case["condition"],
-            "speaker": case["speaker"], "noise": case["noise"],
+            "wav": str(case["wav"]), "condition": case.get("condition", "unspecified"),
+            "speaker": case.get("speaker", "unspecified"), "noise": case.get("noise", "unspecified"),
             "expected_text": case["expected_text"], "transcript": transcript,
             "transcript_correct": _normalize(transcript) == _normalize(case["expected_text"]),
             "expected_accept": case["expected_accept"], "accepted": accepted,

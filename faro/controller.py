@@ -23,6 +23,7 @@ class FaroController:
     simulator: SimulatedMMU
     session_id: str = "demo-session"
     scenario_name: str = "normal"
+    zone_clear_available: bool = True
     confirmation_ttl: float = 10.0
 
     @classmethod
@@ -32,7 +33,8 @@ class FaroController:
         domain.begin_session("demo-session", "Operador de prueba", Mode.MANUAL)
         selected = scenario or Scenario("normal", "flujo normal")
         return cls(plan, AuditStore(audit_path), domain, build_simulator(plan, selected),
-                   scenario_name=selected.name)
+                   scenario_name=selected.name,
+                   zone_clear_available=selected.zone_clear_available)
 
     def __post_init__(self) -> None:
         self.pipeline = VoicePipeline(self.plan, self.domain)
@@ -169,7 +171,8 @@ class FaroController:
     def process(self, text: str, *, source: Source = Source.TEXT,
                 generation: int | None = None, zone_clear: bool = False) -> PipelineResult:
         result = self.pipeline.process(text, source=source, session_id=self.session_id,
-                                       generation=generation, zone_clear=zone_clear)
+                                       generation=generation,
+                                       zone_clear=zone_clear and self.zone_clear_available)
         decision = result.decision
         if decision is None:
             return result

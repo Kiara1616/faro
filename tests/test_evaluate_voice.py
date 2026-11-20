@@ -12,15 +12,15 @@ class EvaluateVoiceTests(unittest.TestCase):
             csv_path = root / "cases.csv"
             csv_path.write_text(
                 "wav,expected_text,expected_accept,setup_commands\n"
-                "a.wav,mostrar estado,true,\n"
+                "a.wav,consultar estado,true,\n"
                 "b.wav,activar bomba,false,\n"
                 "c.wav,activar bomba,false,\n",
                 encoding="utf-8",
             )
             cases = load_cases(csv_path)
             transcripts = {
-                "a.wav": "mostrar estado",
-                "b.wav": "mostrar estado",  # Incorrect ASR becomes an allowed command.
+                "a.wav": "consultar estado",
+                "b.wav": "consultar estado",  # Incorrect ASR becomes an allowed command.
                 "c.wav": "activar bomba",
             }
             report = evaluate_cases(cases, lambda path: (transcripts[path.name], 12.0))
@@ -34,15 +34,15 @@ class EvaluateVoiceTests(unittest.TestCase):
     def test_context_setup_rejects_wrong_sequence(self):
         cases = [{
             "wav": Path("case.wav"),
-            "expected_text": "consultar temperatura",
+            "expected_text": "consultar taladro 101",
             "expected_accept": True,
-            "setup_commands": ["iniciar revision auxiliar"],
+            "setup_commands": ["seleccionar taladro 101"],
         }]
-        report = evaluate_cases(cases, lambda path: ("consultar temperatura", 5.0))
+        report = evaluate_cases(cases, lambda path: ("consultar taladro 101", 5.0))
         self.assertEqual(report["summary"]["decision_accuracy"], 1.0)
-        cases[0]["setup_commands"] = ["consultar temperatura"]
+        cases[0]["setup_commands"] = ["preparar carga"]
         with self.assertRaisesRegex(ValueError, "Preparación de caso rechazada"):
-            evaluate_cases(cases, lambda path: ("consultar temperatura", 5.0))
+            evaluate_cases(cases, lambda path: ("consultar taladro 101", 5.0))
 
     def test_bad_csv_flag_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp:

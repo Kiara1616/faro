@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from faro.core import FaroEngine
+from faro.legacy.indicator_review import FaroEngine
 
 
 def test_complete_review_requires_inspection_at_each_step():

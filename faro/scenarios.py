@@ -17,6 +17,7 @@ class Scenario:
     delay_ticks: int = 1
     timeout_ticks: int | None = None
     fail_actions: frozenset[str] = frozenset()
+    zone_clear_available: bool = True
 
 
 def load_scenarios(path: str | Path) -> dict[str, Scenario]:
@@ -26,11 +27,15 @@ def load_scenarios(path: str | Path) -> dict[str, Scenario]:
         raise ValueError("Invalid fictional scenario structure")
     scenarios: dict[str, Scenario] = {}
     for item in raw.get("scenarios", []):
+        zone_clear_available = item.get("zone_clear_available", True)
+        if type(zone_clear_available) is not bool:
+            raise ValueError("zone_clear_available must be a boolean")
         scenario = Scenario(
             name=item["name"], description=item["description"],
             delay_ticks=item.get("delay_ticks", 1),
             timeout_ticks=item.get("timeout_ticks"),
             fail_actions=frozenset(item.get("fail_actions", [])),
+            zone_clear_available=zone_clear_available,
         )
         if scenario.name in scenarios:
             raise ValueError(f"duplicate scenario: {scenario.name}")
